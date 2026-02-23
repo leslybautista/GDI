@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌐 Geodata Infrastructures – Study Notes</title>
+<style>
+  :root {
+    --blue:#1d4ed8;--blue-l:#dbeafe;--teal:#0f766e;--teal-l:#ccfbf1;
+    --green:#15803d;--green-l:#dcfce7;--purple:#6d28d9;--purple-l:#ede9fe;
+    --orange:#c2410c;--orange-l:#ffedd5;--red:#b91c1c;--red-l:#fee2e2;
+    --indigo:#3730a3;--indigo-l:#e0e7ff;--gray:#374151;--border:#e5e7eb;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;color:var(--gray);line-height:1.65;}
+  .header{background:linear-gradient(135deg,#1e3a5f 0%,#1d4ed8 60%,#0f766e 100%);color:white;padding:2.5rem 2rem;text-align:center;}
+  .header h1{font-size:2rem;font-weight:900;margin-bottom:.4rem;}
+  .header p{opacity:.85;font-size:1.05rem;}
+  .toc{background:white;max-width:960px;margin:1.5rem auto;border-radius:12px;padding:1.5rem 2rem;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+  .toc h2{font-size:.9rem;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.9rem;}
+  .toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.45rem;}
+  .toc a{display:block;padding:.4rem .75rem;border-radius:8px;background:#f8fafc;text-decoration:none;color:var(--blue);font-size:.88rem;font-weight:600;transition:background .15s;}
+  .toc a:hover{background:var(--blue-l);}
+  .wrap{max-width:960px;margin:0 auto;padding:0 1rem 3rem;}
+  .sec{background:white;border-radius:14px;margin-bottom:1.5rem;box-shadow:0 1px 6px rgba(0,0,0,.08);overflow:hidden;}
+  .sec-head{padding:1.25rem 1.75rem;display:flex;align-items:center;gap:.75rem;}
+  .sec-head h2{font-size:1.2rem;font-weight:800;color:white;}
+  .sec-body{padding:1.5rem 1.75rem;}
+  .sub{margin-bottom:1.5rem;}
+  .sub:last-child{margin-bottom:0;}
+  h3{font-size:1rem;font-weight:700;margin-bottom:.75rem;color:#1e293b;padding-left:.75rem;border-left:3px solid currentColor;}
+  p{margin-bottom:.6rem;font-size:.95rem;}
+  ul,ol{padding-left:1.4rem;margin-bottom:.6rem;}
+  li{font-size:.93rem;margin-bottom:.3rem;}
+  strong{font-weight:700;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.75rem;margin-top:.5rem;}
+  .card{border-radius:10px;padding:.9rem 1rem;font-size:.9rem;}
+  .card strong{display:block;font-size:.85rem;font-weight:700;margin-bottom:.35rem;}
+  .c-blue{background:var(--blue-l);border-left:3px solid var(--blue);}
+  .c-teal{background:var(--teal-l);border-left:3px solid var(--teal);}
+  .c-green{background:var(--green-l);border-left:3px solid var(--green);}
+  .c-purple{background:var(--purple-l);border-left:3px solid var(--purple);}
+  .c-orange{background:var(--orange-l);border-left:3px solid var(--orange);}
+  .c-indigo{background:var(--indigo-l);border-left:3px solid var(--indigo);}
+  .c-red{background:var(--red-l);border-left:3px solid var(--red);}
+  .alert{background:#fef9c3;border-left:4px solid #ca8a04;border-radius:8px;padding:.75rem 1rem;font-size:.9rem;margin:.75rem 0;}
+  .alert.info{background:#eff6ff;border-color:var(--blue);}
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:.5rem;}
+  .cmp-col{border-radius:10px;padding:1rem;}
+  .cmp-col h4{font-size:.92rem;font-weight:700;margin-bottom:.6rem;}
+  .cmp-col ul{list-style:none;padding:0;}
+  .cmp-col li{font-size:.88rem;padding:.2rem 0 .2rem 1rem;position:relative;}
+  .cmp-col li::before{content:'•';position:absolute;left:0;}
+  table{width:100%;border-collapse:collapse;font-size:.87rem;margin-top:.5rem;}
+  th{background:#f8fafc;padding:.55rem .8rem;text-align:left;font-weight:700;border-bottom:2px solid var(--border);}
+  td{padding:.5rem .8rem;border-bottom:1px solid var(--border);vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  .timeline{position:relative;padding-left:1.5rem;}
+  .timeline::before{content:'';position:absolute;left:.4rem;top:0;bottom:0;width:2px;background:var(--blue-l);}
+  .tl-item{position:relative;margin-bottom:.85rem;}
+  .tl-item::before{content:'';position:absolute;left:-1.5rem;top:.35rem;width:.6rem;height:.6rem;background:var(--blue);border-radius:50%;}
+  .tl-item .year{font-size:.8rem;font-weight:700;color:var(--blue);display:inline-block;margin-right:.4rem;}
+  .tl-item .desc{font-size:.9rem;}
+  .pill{display:inline-block;border-radius:999px;padding:.15rem .65rem;font-size:.8rem;font-weight:600;margin:.15rem;}
+  .pl-blue{background:var(--blue);color:white;}
+  .pl-teal{background:var(--teal);color:white;}
+  .pl-green{background:var(--green);color:white;}
+  .pl-purple{background:var(--purple);color:white;}
+  .pl-orange{background:var(--orange);color:white;}
+  .highlight{background:#fef3c7;border-radius:3px;padding:0 2px;}
+  .def{border:1.5px solid var(--blue-l);border-radius:8px;padding:.85rem 1rem;margin:.5rem 0;background:#fafbff;}
+  .def em{color:var(--blue);font-style:normal;font-weight:600;}
+  @media(max-width:600px){.cmp{grid-template-columns:1fr;}.cards{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🌐 Geodata Infrastructures</h1>
+  <p>Comprehensive Study Notes · Chapters 1–4 · TU Dresden · Prof. Mäs</p>
+</div>
+
+<div class="toc">
+  <h2>📋 Table of Contents</h2>
+  <div class="toc-grid">
+    <a href="#ch1">Ch.1: What is GDI?</a>
+    <a href="#ch1b">Ch.1: Core Components</a>
+    <a href="#ch1c">Ch.1: GI Services & GDI versions</a>
+    <a href="#ch2">Ch.2: Decision Making & MCDA</a>
+    <a href="#ch2b">Ch.2: Criterion Weighting</a>
+    <a href="#ch2c">Ch.2: Decision Rules & SDSS</a>
+    <a href="#ch2d">Ch.2: Sensitivity Analysis</a>
+    <a href="#ch3a">Ch.3: GDI Types & VGI</a>
+    <a href="#ch3b">Ch.3: aGDI Initiatives</a>
+    <a href="#ch3c">Ch.3: INSPIRE</a>
+    <a href="#ch3d">Ch.3: GDI-DE & GDI Sachsen</a>
+    <a href="#ch3e">Ch.3: Open Data</a>
+    <a href="#ch4a">Ch.4: Interoperability</a>
+    <a href="#ch4b">Ch.4: Standards Bodies (ISO, CEN, OGC)</a>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ===================== CHAPTER 1 ===================== -->
+<div class="sec" id="ch1">
+  <div class="sec-head" style="background:var(--blue)"><span style="font-size:1.5rem">🌍</span><h2>Chapter 1 · Introduction to Geodata Infrastructures</h2></div>
+  <div class="sec-body">
+
+    <div class="sub">
+      <h3 style="color:var(--blue)">The Problem – Isolated Geoinformation Islands</h3>
+      <p>The motivating scenario (Storm "Lothar"): Emergency task force needs a risk map combining forest data (Münster) + road data (Düsseldorf) + base maps (Bonn). Problem: data is distributed across different agencies with no easy way to integrate it.</p>
+      <div class="cards">
+        <div class="card c-red"><strong>❌ Current Problems</strong>Lack of common standards · data cannot be discovered · incompatible data models · doubled/costly data acquisition · no coordination across borders</div>
+        <div class="card c-green"><strong>✅ Solution: GDI</strong>A common infrastructure to support distributed data, enable discovery, achieve interoperability, ease access at all levels, and reduce costs</div>
+      </div>
+    </div>
+
+    <div class="sub">
+      <h3 style="color:var(--blue)">Definitions</h3>
+      <div class="def"><em>GDI / SDI</em> (Geodata / Spatial Data Infrastructure) — used synonymously. Also: Spatial Information Infrastructure (SII).</div>
+      <div class="def"><em>NSDI (USA):</em> "The technology, policies, standards, and human resources necessary to acquire, process, store, distribute, and improve utilization of geospatial data."</div>
+      <div class="def"><em>GDI-DE (Germany):</em> An initiative of Federal Government, Länder and municipalities to network data from all over Germany, making it accessible and useful for decisions.</div>
+    </div>
+
+    <div class="sub">
+      <h3 style="color:var(--blue)">Goals for a GDI (from INSPIRE)</h3>
+      <ul>
+        <li>Support distributed geodata holdings and geoinformation services</li>
+        <li>Achieve <strong>syntactical and semantical interoperability</strong> for integrating distributed geodata</li>
+        <li>Ease <strong>discovery and usage</strong> of Geoinformation</li>
+        <li>Enable <strong>reusability</strong> of geodata across institutions</li>
+        <li>Provide GI and easy access at <strong>all administrative levels</strong></li>
+      </ul>
+    </div>
+
+    <div class="sub">
+      <h3 style="color:var(--blue)">Key Principles of GDI</h3>
+      <div class="cards">
+        <div class="card c-blue"><strong>Subsidiarity</strong>Data/service owners act as responsible information providers in a distributed system</div>
+        <div class="card c-blue"><strong>Interoperability & Interdisciplinarity</strong>Established standards and reference systems</div>
+        <div class="card c-blue"><strong>Transparency & Reliability</strong>Discoverability, reusability, openness · long-term availability</div>
+        <div class="card c-blue"><strong>Scalability</strong>Extendable — both technically and organizationally</div>
+        <div class="card c-blue"><strong>Efficiency & Effectiveness</strong>Easily accessible, best-suited information for problem-solving</div>
+      </div>
+    </div>
+
+    <div class="sub">
+      <h3 style="color:var(--blue)">Key Milestones</h3>
+      <div class="timeline">
+        <div class="tl-item"><span class="year">1991</span><span class="desc">World Wide Web (WWW)</span></div>
+        <div class="tl-item"><span class="year">1994</span><span class="desc">OGC (Open Geospatial Consortium) + US NSDI</span></div>
+        <div class="tl-item"><span class="year">1998</span><span class="desc">Digital Earth concept + EU Aarhus Convention</span></div>
+        <div class="tl-item"><span class="year">2004</span><span class="desc">OpenStreetMap founded</span></div>
+        <div class="tl-item"><span class="year">2005</span><span class="desc">Google Maps / Google Earth</span></div>
+        <div class="tl-item"><span class="year">2007</span><span class="desc">INSPIRE Directive (EU law for geoinformation)</span></div>
+        <div class="tl-item"><span class="year">2010</span><span class="desc">Ordnance Survey Open Data</span></div>
+        <div class="tl-item"><span class="year">2013</span><span class="desc">INSPIRE Data Specifications finalized</span></div>
+      </div>
+    </div>
+
+    <div class="sub">
+      <h3 style="color:var(--blue)">Types of GDI Initiatives</h3>
+      <div class="cards">
+        <div class="card c-blue"><strong>🏛️ Politically driven</strong>GSDI (Global), INSPIRE (European), GDI-DE (National), GDI Sachsen (State)</div>
+        <div class="card c-orange"><strong>💰 Commercially driven</strong>Google Earth, Bing, ArcGIS Online, company-internal GDIs</div>
+        <div class="card c-green"><strong>👥 Community driven</strong>OpenStreetMap (OSM)</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="sec" id="ch1b">
+  <div class="sec-head" style="background:var(--teal)"><span style="font-size:1.5rem">🧱</span><h2>Chapter 1 · Core Components of a GDI</h2></div>
+  <div class="sec-body">
+    <div class="cards">
+      <div class="card c-teal"><strong>1. Distributed Geodata & GI Services</strong>Providers X, Y, Z each hold geodata and offer GI services. No single central database!</div>
+      <div class="card c-teal"><strong>2. Network</strong>The Internet connects all providers and users</div>
+      <div class="card c-teal"><strong>3. Standards & Rules</strong>"Lingua franca" for interoperability. De facto: W3C, OASIS, OGC. De jure: ISO, CEN, DIN. Guidelines: INSPIRE</div>
+      <div class="card c-teal"><strong>4. Organizational Structure</strong>Roles: Users, Data Providers, Solution Providers. Reference model (goals, standards, rights, duties) + Operation model (assigning tasks)</div>
+    </div>
+  </div>
+</div>
+
+<div class="sec" id="ch1c">
+  <div class="sec-head" style="background:var(--indigo)"><span style="font-size:1.5rem">⚙️</span><h2>Chapter 1 · GI Services & GDI Versions</h2></div>
+  <div class="sec-body">
+    <div class="sub">
+      <h3 style="color:var(--indigo)">Key GI Services (W*S)</h3>
+      <div class="cards">
+        <div class="card c-indigo"><strong>WMS</strong>Web Map Service – serves rendered map images</div>
+        <div class="card c-indigo"><strong>WFS</strong>Web Feature Service – serves raw vector geodata (features)</div>
+        <div class="card c-indigo"><strong>WCS</strong>Web Coverage Service – serves raster/gridded data</div>
+        <div class="card c-indigo"><strong>CSW</strong>Catalogue Service for the Web – serves metadata for discovery</div>
+      </div>
+      <p style="margin-top:.75rem;">GI Services: <strong>are web services</strong> · conform to ISO/OpenGIS Standards · always available · follow the <strong>publish–find–bind paradigm</strong> · can be orchestrated (service chaining)</p>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--indigo)">GDI Versions</h3>
+      <div class="cmp">
+        <div class="cmp-col" style="background:var(--indigo-l);">
+          <h4>GDI 1.0 (2000–today)</h4>
+          <ul><li>Focuses on <em>publication</em> of distributed GI</li><li>Discovery, data access, (map) visualization</li><li>GI services ≈ simple GIS tools</li><li><strong>One-way communication</strong></li></ul>
+        </div>
+        <div class="cmp-col" style="background:#f0fdf4;">
+          <h4>GDI 2.0/3.0/4.0 (mostly research)</h4>
+          <ul><li>Also enables distributed <em>processing, updating, integration</em></li><li><strong>Two-way communication</strong></li><li>Still future direction!</li></ul>
+        </div>
+      </div>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--indigo)">GDI ≠ No More GIS!</h3>
+      <p>GIS is still needed for: complex analysis (climate scenarios), high-performance tasks, 3D visualizations, and — crucially — <strong>GIS is the tool to prepare and provide geodata and GI services INTO the GDI</strong>. GIS becomes a <em>GDI development and authoring tool</em>.</p>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--indigo)">Practical Example: Risk Map (2002 vs. 2018)</h3>
+      <p><strong>2002:</strong> 3 steps using Application Service → WFS (forests, age>80y) → WFS (roads crossing forests) → WMS (render map). ~1 month implementation by experts.</p>
+      <p><strong>2018:</strong> Using FME combining 2 WFS (flood areas + CORINE land cover) → overlay calculation → result map. <strong>&lt; 2 hours</strong> for an expert. Same concept, much easier with modern tools.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== CHAPTER 2 ===================== -->
+<div class="sec" id="ch2">
+  <div class="sec-head" style="background:var(--purple)"><span style="font-size:1.5rem">🎯</span><h2>Chapter 2 · Spatial Decision Support Systems & MCDA</h2></div>
+  <div class="sec-body">
+    <div class="sub">
+      <h3 style="color:var(--purple)">Types of Decision Problems</h3>
+      <div class="cards">
+        <div class="card c-purple"><strong>Structured</strong>Routine problems, clear solution procedure, can be automated</div>
+        <div class="card c-purple"><strong>Unstructured</strong>Novel/complex problems, no clear procedure, require human judgment</div>
+        <div class="card c-purple"><strong>Semi-structured</strong>Mix of both → ideal target for (S)DSS! Part can be automated/modelled, part requires judgment</div>
+      </div>
+      <div class="alert">💡 DSS (Decision Support Systems) are applied to <strong>semi-structured problems</strong> because fully structured problems don't need a DSS and fully unstructured ones can't be modelled.</div>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--purple)">The Decision-Making Process (Malczewski, 1999)</h3>
+      <ol>
+        <li><strong>Intelligence Phase:</strong> What is the problem? What are the opportunities for change? Who are the stakeholders?</li>
+        <li><strong>Design Phase:</strong> What are the alternatives? Define decision criteria and get input data. Develop evaluation model (decision rules).</li>
+        <li><strong>Choice Phase:</strong> Evaluate alternatives (which is best?). Sensitivity analysis. Formulate recommendations.</li>
+      </ol>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--purple)">MCDA (Multi-Criteria Decision Analysis) — Key Concepts</h3>
+      <div class="cards">
+        <div class="card c-purple"><strong>Criteria Types</strong><em>Cost criteria:</em> negative impact when values increase (e.g. price, distance to station)<br><em>Benefit criteria:</em> positive impact when values increase (e.g. property size)<br><em>Constraints:</em> exclude certain alternatives (e.g. nature reserves)</div>
+        <div class="card c-purple"><strong>MCDA in 5 Steps</strong>1. Know finite set of alternatives<br>2. Name criteria (cost vs benefit)<br>3. Standardize criteria (common scale)<br>4. Assign weights to criteria<br>5. Aggregate weighted criteria, rank</div>
+        <div class="card c-purple"><strong>Standardization Methods</strong>Classification into k classes · Linear scale [0..1] (max score, score range) · Z-transformation: z=(x-mean)/std (for normally distributed ratio data)</div>
+        <div class="card c-purple"><strong>Selecting Criteria (how)</strong>1. Literature studies<br>2. Analytical studies (observation)<br>3. Survey of opinions (e.g. Delphi method, interviews)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sec" id="ch2b">
+  <div class="sec-head" style="background:var(--purple)"><span style="font-size:1.5rem">⚖️</span><h2>Chapter 2 · Criterion Weighting Methods</h2></div>
+  <div class="sec-body">
+    <div class="sub">
+      <h3 style="color:var(--purple)">Method 1: Ranking and Rating</h3>
+      <p>Rank or rate criteria according to preferences, then derive normalized weights. <span class="pill pl-purple">✅ Simple & very common</span> <span class="pill" style="background:#dc2626;color:white">❌ No sound basis · Not applicable for many criteria (7±2 limit)</span></p>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--purple)">Method 2: Pairwise Comparison</h3>
+      <p>Criteria are compared pair-by-pair using a matrix. Score: 1 = equally important, up to 9 = extremely more important. Scores normalized by column sums; normalized scores averaged per criterion → weights.</p>
+      <p><span class="pill pl-purple">✅ Sound basis</span> <span class="pill pl-purple">✅ Allows consistency checks</span> <span class="pill" style="background:#dc2626;color:white">❌ Pairs grow with n² — not scalable to many criteria</span></p>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--purple)">Method 3: Analytical Hierarchy Process (AHP)</h3>
+      <p>Solution to the pairwise comparison scalability problem: Define sub-goals, assign criteria to sub-goals, do pairwise comparison <em>within each subgroup</em>. This keeps the number of comparisons manageable.</p>
+      <p>AHP can also be used as a <strong>decision rule</strong> (not just for weighting).</p>
+    </div>
+  </div>
+</div>
+
+<div class="sec" id="ch2c">
+  <div class="sec-head" style="background:var(--purple)"><span style="font-size:1.5rem">📊</span><h2>Chapter 2 · Decision Rules & SDSS Approaches</h2></div>
+  <div class="sec-body">
+    <div class="sub">
+      <h3 style="color:var(--purple)">Decision Rule 1: Additive Weighting Method (WLC)</h3>
+      <p><strong>score_i = Σ(w_j × c_ij)</strong> — For each alternative i, sum the n weighted, standardized criteria. Rank by score.</p>
+      <p><span class="pill pl-purple">✅ Simple, most used, implemented in GIS</span> <span class="pill" style="background:#dc2626;color:white">❌ Requires mutually independent criteria!</span></p>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--purple)">Decision Rule 2: Ideal Point Method (TOPSIS)</h3>
+      <p>1. Define ideal point (max of each criterion) and nadir point (min of each criterion).<br>
+      2. Calculate separation of each alternative to the ideal point (Si*) and nadir point (Si−).<br>
+      3. Relative closeness = Si− / (Si* + Si−) → [0..1], closer to 1 = better.<br>
+      4. Rank by closeness.</p>
+      <p><span class="pill pl-purple">✅ Still fairly simple</span> <span class="pill pl-purple">✅ Less sensitive to criteria interdependence</span></p>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--purple)">Two SDSS Design Approaches</h3>
+      <div class="cmp">
+        <div class="cmp-col" style="background:var(--purple-l);">
+          <h4>Alternative-driven (Multi-Attribute)</h4>
+          <ul><li>Alternatives are <em>already known</em></li><li>Need to define criteria and threshold values</li><li>Example: choosing ski resort from 40 known options</li></ul>
+        </div>
+        <div class="cmp-col" style="background:#f0fdf4;">
+          <h4>Data/Value-driven (Multi-Objective)</h4>
+          <ul><li>Criteria data is known, need to <em>identify</em> alternatives</li><li>Typically raster-based: each cell = one alternative</li><li>Example: evacuation planning after chemical accident</li></ul>
+        </div>
+      </div>
+      <div class="alert">📌 In raster-based MCDA, <strong>each raster cell represents an alternative</strong>. Results can be used as cost surfaces for further analysis (e.g. finding optimal locations or paths).</div>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--purple)">GIS Methods for SDSS</h3>
+      <ul>
+        <li><strong>Pre-process input data:</strong> coordinate & schema transformations, spatial aggregation, generalization, interpolation</li>
+        <li><strong>Calculate criteria:</strong> distances, areas, overlay, map algebra, network functions, DEM calculations (slope, viewshed)</li>
+        <li><strong>Apply decision rules:</strong> overlay and aggregation</li>
+        <li><strong>Communicate:</strong> geovisualization to illustrate criteria and alternatives</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="sec" id="ch2d">
+  <div class="sec-head" style="background:var(--purple)"><span style="font-size:1.5rem">🔍</span><h2>Chapter 2 · Sensitivity Analysis & ppGIS</h2></div>
+  <div class="sec-body">
+    <div class="sub">
+      <h3 style="color:var(--purple)">Sensitivity Analysis</h3>
+      <p>How sensitive is the best alternative/decision against potential uncertainties or errors? Sources of uncertainty:</p>
+      <ul><li>Wrong or missing criteria</li><li>Errors in the criteria datasets</li><li>Errors in the weighting</li></ul>
+      <div class="cards">
+        <div class="card c-purple"><strong>Method 1: Error Propagation</strong>Requires all potential errors to be known and documented. Rarely the case, especially for soft criteria. Errors must be statistically independent (also rarely guaranteed).</div>
+        <div class="card c-purple"><strong>Method 2: Monte Carlo</strong>Generate many criteria data sets with slight random variations → run the decision model with each → observe which alternatives change → provides overview of sensitivity. May require computing power.</div>
+      </div>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--purple)">ppGIS (Public Participation GIS)</h3>
+      <p>Techniques to incorporate multiple <strong>stakeholders</strong> (with conflicting objectives) into the decision-finding process. Overlaps with GDI concepts (e.g., internet map with commenting function). Terms not yet well-defined (Schlossberg & Shuford, 2005).</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== CHAPTER 3 ===================== -->
+<div class="sec" id="ch3a">
+  <div class="sec-head" style="background:var(--green)"><span style="font-size:1.5rem">🗺️</span><h2>Chapter 3 · GDI Species: VGI & Commercial</h2></div>
+  <div class="sec-body">
+    <div class="sub">
+      <h3 style="color:var(--green)">Volunteered / Crowdsourced Geoinformation (VGI)</h3>
+      <div class="def"><em>Crowdsourcing (Howe, 2006):</em> Obtaining services, ideas, or content by soliciting contributions from a large online community rather than traditional employees or suppliers.</div>
+      <p>Related concepts: Open Source (~1997) · Wiki (~2001) · User Generated Content (~2004) · Volunteered Geoinformation (~2007)</p>
+      <p><strong>Enablers:</strong> Ubiquitous networks (LAN, WLAN, GSM) · GPS · Cheap mobile sensors (smartphones) · Development platforms · Web 2.0, social networks · Digital humanitarians</p>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--green)">VGI Categories</h3>
+      <div class="cards">
+        <div class="card c-green"><strong>Topic of data</strong>Road/topography · bird counts · noise mapping · road quality</div>
+        <div class="card c-green"><strong>Data gathering</strong>Volunteered vs. opportunistic · Knowingly vs. unknowingly · Active vs. passive · Local to global</div>
+        <div class="card c-green"><strong>Motivation & Incentives</strong>Intrinsic vs. extrinsic · Being affected · Reputation systems · Gamification</div>
+        <div class="card c-green"><strong>Quality Control</strong>None · Self-regulating · Automatic plausibility checks · Double/multiple acquisitions · Comparison with reference data</div>
+        <div class="card c-green"><strong>Organizational model</strong>Collaborative vs. centralistic</div>
+        <div class="card c-green"><strong>Data Management</strong>Distributed or central · Structured vs. unstructured · VGI normally open access</div>
+      </div>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--green)">VGI Evaluation vs. GDI Principles</h3>
+      <table>
+        <tr><th>Principle</th><th>VGI Assessment</th></tr>
+        <tr><td>Subsidiarity</td><td>❌ Mostly central databases, not distributed infrastructure</td></tr>
+        <tr><td>Interoperability</td><td>〇 Often simple/lean de-facto standards, partly proprietary but mostly open</td></tr>
+        <tr><td>Transparency/Reliability</td><td>⚠️ Mostly free accessible, data quality unclear or bad, long-term availability NOT guaranteed</td></tr>
+        <tr><td>Efficiency/Effectiveness</td><td>✅ Can be efficient for suited applications; BUT crowd dictates content and coverage</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="sec" id="ch3b">
+  <div class="sec-head" style="background:var(--green)"><span style="font-size:1.5rem">🏛️</span><h2>Chapter 3 · Administrative GDI (aGDI) Initiatives</h2></div>
+  <div class="sec-body">
+    <div class="sub">
+      <h3 style="color:var(--green)">aGDI Overview</h3>
+      <p>aGDI = what experts understand as "GDI". Developed by public administrations. Basis: ISO and OpenGIS Standards (WMS, WCS, WFS, GML/XML, CityGML, …). Typically offers: discovery, visualization, download services.</p>
+      <p><strong>GDI Hierarchy model</strong> (Rajabifard et al., 2002): Global → Regional → National → State (Länder) → Local. However: this hierarchy is too idealistic — actual aGDI emerged through specific individual activities.</p>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--green)">Chronology of aGDI Initiatives</h3>
+      <div class="timeline">
+        <div class="tl-item"><span class="year">~1993</span><span class="desc"><strong>US NSDI</strong> (national) — one of the first national GDI initiatives</span></div>
+        <div class="tl-item"><span class="year">~1996</span><span class="desc"><strong>GSDI</strong> (global) — Global Spatial Data Infrastructure Association</span></div>
+        <div class="tl-item"><span class="year">~1998</span><span class="desc"><strong>GDI-DE</strong> started via IMAGI committee; actual GDI-DE established 2003</span></div>
+        <div class="tl-item"><span class="year">~1999</span><span class="desc"><strong>GDI NRW</strong> (state level) — first mover, Public-Private Partnerships</span></div>
+        <div class="tl-item"><span class="year">~2000/07</span><span class="desc"><strong>INSPIRE</strong> (European) — started 2001, Directive adopted April 2007</span></div>
+        <div class="tl-item"><span class="year">~2007</span><span class="desc"><strong>GDI Sachsen</strong> — gdi.initiative.sachsen founded June 2007</span></div>
+        <div class="tl-item"><span class="year">~2009</span><span class="desc"><strong>UN GGIM</strong> (global) — installed as UN expert forum 2011</span></div>
+      </div>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--green)">US NSDI</h3>
+      <p><strong>Legal basis:</strong> Executive Order 12906 (Clinton, April 1994) → established NSDI as overall goal, created FGDC (Federal Geographic Data Committee).</p>
+      <p><strong>Requirements:</strong> National Geospatial Data Clearinghouse → National Digital Geospatial Data Framework (min: traffic, hydrology, admin units) → Metadata standards → Federal geodata free of charge.</p>
+      <p><strong>NSDI Framework — 7 data topics:</strong> Geodetic control · Orthoimagery · Elevation · Transportation · Hydrography · Governmental units · Cadastral information.</p>
+      <p><strong>Significance:</strong> One of the FIRST national GDI initiatives · politically and legally mandated · financially supported · served as blueprint for others.</p>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--green)">GSDI (Global)</h3>
+      <p>Mission: forum for those developing and implementing SDI concepts globally. Focus on <em>less developed countries</em>. GSDI Cookbook — best practices for national geodata bases. <strong>Dissolved as legal entity October 2018</strong> → transitioned to UN GGIM.</p>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--green)">GDI NRW</h3>
+      <p>Started 1999 by NRW Mapping Agency + NRW Ministry of Interior. <strong>Geodata paradox:</strong> geodata acquisition is costly, yet geodata generates low revenues → requires adding value. Estimated market: 2,000 Mio€ (actual at start: 300 Mio€). MICUS Study recommendations: lower geodata costs, offer online, Public-Private Partnerships.</p>
+    </div>
+  </div>
+</div>
+
+<div class="sec" id="ch3c">
+  <div class="sec-head" style="background:var(--orange)"><span style="font-size:1.5rem">🇪🇺</span><h2>Chapter 3 · INSPIRE</h2></div>
+  <div class="sec-body">
+    <div class="sub">
+      <h3 style="color:var(--orange)">What is INSPIRE?</h3>
+      <div class="def"><em>INSPIRE = INfrastructure for SPatial InfoRmation in Europe</em><br>Started Sept. 2001. INSPIRE Framework Directive adopted <strong>April 2007</strong>, took effect May 2007. <strong>First EU legislation focusing on geoinformation.</strong></div>
+      <p>Driving forces: INSPIRE Expert Group + European Commission (DG Environment, EuroStat, JRC).</p>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--orange)">Goals of INSPIRE</h3>
+      <ul>
+        <li>Support integrated <strong>European Environmental Policies</strong></li>
+        <li>Build on national GDIs and international standards</li>
+        <li>Use existing digital geodata and spatial data services of the public sector</li>
+        <li>Follows a <strong>stepwise implementation plan</strong></li>
+      </ul>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--orange)">5 Core Components of INSPIRE</h3>
+      <div class="cards">
+        <div class="card c-orange"><strong>1. Metadata</strong>For discovery and assessment of GI. Contains: conformity, licenses, quality, responsibilities, access restrictions</div>
+        <div class="card c-orange"><strong>2. Harmonized Data Specifications</strong>34 topics in 3 Annexes. Harmonized object classifications + geo-referencing. For Annex I & II: also identifiers, relations, core attributes, temporal dimension, versioning</div>
+        <div class="card c-orange"><strong>3. Interoperable Network Services</strong>Discovery, viewing, access, transformation, and further spatial data services. Should be online since 2011. European Geoportal as entry point</div>
+        <div class="card c-orange"><strong>4. Data and Service Sharing</strong>Ease access for authorities. No fees or minimal fees. No distorting market competition. No access to critical infrastructure / protected species. No interference with IP rights</div>
+        <div class="card c-orange"><strong>5. Monitoring & Reporting</strong>Member states: establish contact points, adopt directive into national law (by 2010), annual reports. EC: coordinates, reports every 6 years to European Parliament</div>
+      </div>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--orange)">INSPIRE Annex Topics</h3>
+      <table>
+        <tr><th>Annex</th><th>Deadline</th><th>Topics (examples)</th></tr>
+        <tr><td><strong>I</strong></td><td>2009</td><td>Addresses · Administrative units · Cadastral parcels · Coordinate ref. systems · Geographical grid systems · Geographical names · Hydrography · Protected sites · Transport networks</td></tr>
+        <tr><td><strong>II</strong></td><td>2013</td><td>Elevation · Geology · Land cover · Orthoimagery</td></tr>
+        <tr><td><strong>III</strong></td><td>2013</td><td>Agricultural facilities · Buildings · Energy resources · Environmental monitoring · Habitats · Land use · Meteorological features · Natural risk zones · Population distribution · Soil · Species distribution…</td></tr>
+      </table>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--orange)">INSPIRE Rules: Implementing Rules vs. Guidance Documents</h3>
+      <div class="cmp">
+        <div class="cmp-col" style="background:var(--orange-l);">
+          <h4>Implementing Rules (legally binding)</h4>
+          <ul><li>Part of INSPIRE Framework Directive</li><li>Define <em>mid/long-term requirements</em> ("WHAT")</li><li>Regulate the minimum required</li></ul>
+        </div>
+        <div class="cmp-col" style="background:#eff6ff;">
+          <h4>Guidance Documents (not legally binding)</h4>
+          <ul><li>Regulate technical details about specs/interfaces/encoding</li><li>Tell "HOW"</li><li>Example: metadata conforms to ISO 19115 / ISO 19119 / ISO 15836</li><li>Can be updated as technologies change</li></ul>
+        </div>
+      </div>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--orange)">INSPIRE Conclusions</h3>
+      <p><strong>Top-down:</strong> Directive = European Law. Implementing Rules must be implemented stepwise.</p>
+      <p><strong>Bottom-up:</strong> Development involved SDICs (Spatial Data Interest Communities), LMOs (Legally Mandated Organizations), Drafting Teams, Thematic Working Groups.</p>
+      <p><strong>Scope:</strong> Focuses on environmental data but stimulates European GDI development in general. Ambitious → requires adaptations (REFIT 2016: stepped back from full harmonization requirements).</p>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--orange)">European Foundations (pre-INSPIRE)</h3>
+      <div class="cards">
+        <div class="card c-orange"><strong>NUTS Classification</strong>NUTS1: major regions (=Bundesländer) · NUTS2: basic regions (=Bezirksregierungen) · NUTS3: small regions (=Kreise)</div>
+        <div class="card c-orange"><strong>Map Projections (ETRS89)</strong>Large/medium scales: ETRS-TMzn (UTM) · Small scales: ETRS-LCC · Equal area: ETRS-LAEA</div>
+        <div class="card c-orange"><strong>Geodatasets</strong>CORINE Landcover · European Soil Atlas · EuroBoundaryMap · EuroDEM</div>
+        <div class="card c-orange"><strong>Aarhus Convention (1998)</strong>Free access to environmental information</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sec" id="ch3d">
+  <div class="sec-head" style="background:var(--teal)"><span style="font-size:1.5rem">🇩🇪</span><h2>Chapter 3 · GDI-DE & GDI Sachsen</h2></div>
+  <div class="sec-body">
+    <div class="sub">
+      <h3 style="color:var(--teal)">GDI-DE</h3>
+      <p>Initiated 1998 by <strong>IMAGI</strong> (Interministerial Committee for Geoinformation). Tasks: build German Geoportal (via BKG, Frankfurt/Leipzig), harmonize feature catalogs/interfaces (ALKIS/ATKIS), implement NGDB (National Spatial Data Base). Actual GDI-DE established 2003 within German federal e-government initiative.</p>
+      <p><strong>Core tasks today:</strong> Coordinates GDI development nationally (federal, states, municipalities) · National contact point for INSPIRE · Develops regulations and best practices · Operates core components (Geoportal.de, Catalogue) · Supported drafting of National Geoinformation Strategy (NGIS).</p>
+      <p><strong>Legal basis:</strong> Geodatenzugangsgesetz (adopted 7/2008, revised 11/2012 to enforce open access at federal level). States adopted their own laws using the federal law as blueprint.</p>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--teal)">GDI Sachsen</h3>
+      <p>GDI Sachsen e.V. (2002) → GDI Sachsen office at Saxony Mapping Agency (2007) → <strong>gdi.initiative.sachsen</strong> (June 2007) → Cabinet decision mandating all departments to participate (Sept. 2007).</p>
+      <p><strong>Strategy:</strong> Define reference and operation model (responsibilities, INSPIRE data identification, systems/services, quality criteria, licensing policies, migration schedule) → Implement central components.</p>
+      <p><strong>Identified roles:</strong> n geodata-holding bodies · 1 GDI-Service-Center (GeoSN) · 1 GDI-Control Center (SMI) · n users.</p>
+      <p><strong>Application:</strong> Sachsenatlas (http://sachsenatlas.de) as main web GIS portal. Open geodata in Saxony since 2019.</p>
+    </div>
+  </div>
+</div>
+
+<div class="sec" id="ch3e">
+  <div class="sec-head" style="background:var(--green)"><span style="font-size:1.5rem">📂</span><h2>Chapter 3 · Open Data</h2></div>
+  <div class="sec-body">
+    <div class="sub">
+      <h3 style="color:var(--green)">Open Data Directive (EU) 2019/1024</h3>
+      <p>Entered force 16 July 2019. Replacing the PSI Directive (2003). Defines <strong>High Value Datasets</strong> that must be published free of charge via APIs in machine-readable format, downloadable in bulk.</p>
+      <p><strong>6 High Value Dataset Categories:</strong> Geospatial · Earth observation & environment · Meteorological · Statistics · Companies & company ownership · Mobility</p>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--green)">Open Data Challenges & Costs</h3>
+      <div class="cmp">
+        <div class="cmp-col" style="background:#fef2f2;">
+          <h4>Direct costs (provider)</h4>
+          <ul><li>Resource costs to collect data</li><li>Transformation to public-consumable format</li><li>Data sharing / portal administration</li><li>Creating additional metadata</li><li>Maintaining and updating datasets</li></ul>
+        </div>
+        <div class="cmp-col" style="background:#fff7ed;">
+          <h4>Challenges</h4>
+          <ul><li>Gap between raw data provision and actual engagement</li><li>Lack of tracking mechanisms</li><li>Balancing privacy vs. transparency</li><li>Public sector subsidizing private sector</li><li>Return on invest cannot be calculated</li></ul>
+        </div>
+      </div>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--green)">Open Data Portal Hierarchy</h3>
+      <p>Global (UNdata, World Bank) → European (European Data Portal, INSPIRE Geoportal) → Germany (GovData, Geoportal.de) → Federal States (Transparenzportal Hamburg, Open.NRW) → Municipalities (Dresden, Bonn, Leipzig)</p>
+    </div>
+    <div class="alert info">💡 <strong>Key distinction:</strong> aGDI vs. Open Data — aGDI focuses on structured interoperable services for professionals; Open Data focuses on releasing raw data for broad reuse. Both are partly provided by the same administrations but serve different goals.</div>
+  </div>
+</div>
+
+<!-- ===================== CHAPTER 4 ===================== -->
+<div class="sec" id="ch4a">
+  <div class="sec-head" style="background:var(--red)"><span style="font-size:1.5rem">🔗</span><h2>Chapter 4 · Interoperability for Geoinformation</h2></div>
+  <div class="sec-body">
+    <div class="sub">
+      <h3 style="color:var(--red)">Definitions</h3>
+      <div class="def"><em>General (IEEE, 1990):</em> "The ability of two or more systems or components to exchange information and to use the information that has been exchanged."</div>
+      <div class="def"><em>For GI (INSPIRE, 2007):</em> "The possibility for spatial data sets to be combined, and for services to interact, without repetitive manual intervention, in such a way that the result is coherent and the added value is enhanced."</div>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--red)">Requirements for Information System Interoperability</h3>
+      <div class="cards">
+        <div class="card c-red"><strong>1. Interfaces</strong>Well-defined communication interfaces (e.g. HTTP)</div>
+        <div class="card c-red"><strong>2. Encoding</strong>Well-defined common language for transferring information (e.g. XML)</div>
+        <div class="card c-red"><strong>3. Identifiers</strong>Unique identifiers to find and allocate objects (e.g. URI, URL)</div>
+        <div class="card c-red"><strong>4. Standards</strong>Specifications (standards/norms/contracts) describing the above, agreed upon by consensus organizations</div>
+      </div>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--red)">ISO 19119 Terminology</h3>
+      <div class="cards">
+        <div class="card c-red"><strong>Service</strong>A distinct part of the functionality that is provided by an entity through interfaces (e.g. "WMS")</div>
+        <div class="card c-red"><strong>Interface</strong>A named set of operations that characterize the behavior of an entity (e.g. "GetMap interface")</div>
+        <div class="card c-red"><strong>Operation</strong>A specification of a transformation or query that an object may be called to execute. Has a name and list of parameters (e.g. "GetMap(bbox, layers, …)")</div>
+      </div>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--red)">History of GI Interoperability</h3>
+      <div class="timeline">
+        <div class="tl-item"><span class="year">~1985</span><span class="desc"><strong>Data-Exchange-Format Era:</strong> GIS on desktop PCs, proprietary monolithic systems, data exchange via files, no open APIs</span></div>
+        <div class="tl-item"><span class="year">~1995</span><span class="desc"><strong>GI-Interoperability-via-API Era:</strong> GIS get distributed (multi-layer architectures), GeoMiddleware (ArcSDE, Oracle-Spatial), move towards APIs — but still proprietary. Metadata standardization becomes hot topic</span></div>
+        <div class="tl-item"><span class="year">~2002</span><span class="desc"><strong>GI-WebService-1.0 Era:</strong> OpenGIS Consortium founded 1994: "complete integration of geospatial data and geoprocessing into mainstream computing." WMS specification marks the start of the GI web service era</span></div>
+        <div class="tl-item"><span class="year">~2015</span><span class="desc"><strong>SpatialDataOnTheWeb / OpenAPI / OpenData:</strong> Spatial data on the web (W3C/OGC), OpenAPI, EarthCubes, Open Data emerge</span></div>
+      </div>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--red)">De Facto vs. De Jure Standards</h3>
+      <div class="cmp">
+        <div class="cmp-col" style="background:#fef2f2;">
+          <h4>De Facto (industry standards)</h4>
+          <ul><li>OGC (Open Geospatial Consortium)</li><li>IETF, OASIS, W3C (generic IT)</li><li>ADV (German surveying)</li><li>Not legally binding but widely accepted</li></ul>
+        </div>
+        <div class="cmp-col" style="background:#fef9c3;">
+          <h4>De Jure (norms, legally binding)</h4>
+          <ul><li>ISO (International Org. for Standardization)</li><li>INSPIRE EU Directive</li><li>CEN (European standards)</li><li>DIN (German standards)</li></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sec" id="ch4b">
+  <div class="sec-head" style="background:var(--indigo)"><span style="font-size:1.5rem">📐</span><h2>Chapter 4 · Standards Bodies</h2></div>
+  <div class="sec-body">
+    <div class="sub">
+      <h3 style="color:var(--indigo)">ISO (International Organization for Standardization)</h3>
+      <p>Founded 1946. Named after Greek <em>isos</em> = "equal". Network of national bodies from <strong>165 countries</strong>, each with <strong>one vote</strong>. Developed >13,700 standards. Funded by membership fees + selling standards. Official languages: English, French, Russian.</p>
+      <p><strong>Process:</strong> Working Groups develop Draft International Standards (DIS) → circulated for comments → Final DIS (FDIS) → ISO Standard (if majority accepts). Process takes <strong>at least 24 months</strong>.</p>
+      <p><strong>ISO TC 211 (Geographic Information):</strong> Founded 1994. Develops ISO 191xx standards. Key standards:</p>
+      <div class="cards">
+        <div class="card c-indigo"><strong>ISO 19107</strong>Spatial schema</div>
+        <div class="card c-indigo"><strong>ISO 19108</strong>Temporal schema</div>
+        <div class="card c-indigo"><strong>ISO 19109</strong>Rules for application schema</div>
+        <div class="card c-indigo"><strong>ISO 19110</strong>Feature cataloguing methodology</div>
+        <div class="card c-indigo"><strong>ISO 19111</strong>Spatial referencing by coordinates</div>
+        <div class="card c-indigo"><strong>ISO 19115</strong>Metadata</div>
+        <div class="card c-indigo"><strong>ISO 19117</strong>Portrayal</div>
+        <div class="card c-indigo"><strong>ISO 19118</strong>Encoding</div>
+        <div class="card c-indigo"><strong>ISO 19119</strong>Services (defines service/interface/operation)</div>
+      </div>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--indigo)">CEN (Comité Européen de Normalisation)</h3>
+      <p>Founded 1961. Similar to ISO but <strong>European focus</strong>. <strong>Key difference: CEN norms are mandatory for EU member states</strong> → basis for INSPIRE. Cooperates with ISO via Vienna Agreement (1993).</p>
+      <p><strong>CEN TC 287 (GI):</strong> Founded 1993, set dormant when ISO TC 211 started (1994), revived 2004/05 to enact ISO specifications as mandatory in Europe for INSPIRE.</p>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--indigo)">OGC (Open Geospatial Consortium)</h3>
+      <p>Stems from Open GRASS Foundation. Founded <strong>1994</strong> as OpenGIS Consortium, renamed 2004. Non-profit. <strong>500+ members</strong> from business, administration, science, academia. ~20 employees. TU Dresden is a member!</p>
+      <p><strong>Mission:</strong> Global forum for collaboration of spatial data developers and users, advancing international standards for geospatial interoperability.</p>
+      <div class="cards">
+        <div class="card c-indigo"><strong>1. Standards Program</strong>Cooperative consensus process in Technical Committee to develop standards</div>
+        <div class="card c-indigo"><strong>2. Innovation Program</strong>Testbeds (6-12 months): develop draft specs with proof-of-concept. Pilots: demonstrate existing standards in a domain</div>
+        <div class="card c-indigo"><strong>3. Compliance Program</strong>Interoperability check for software products (OGC Validator)</div>
+        <div class="card c-indigo"><strong>4. Communications & Outreach</strong>Marketing: widening usage of OGC Standards, gaining sponsorship</div>
+      </div>
+      <p style="margin-top:.75rem;"><strong>ISO/OGC cooperation since 1998:</strong> ISO 191xx standards and OGC Abstract Specifications to be merged. OGC Implementation Specifications → introduced into ISO. ISO process to be accelerated.</p>
+    </div>
+    <div class="sub">
+      <h3 style="color:var(--indigo)">Key Comparison: ISO vs. CEN vs. OGC</h3>
+      <table>
+        <tr><th>Feature</th><th>ISO TC 211</th><th>CEN TC 287</th><th>OGC</th></tr>
+        <tr><td>Type</td><td>De jure (norms)</td><td>De jure (mandatory in EU)</td><td>De facto</td></tr>
+        <tr><td>Scope</td><td>Global</td><td>European</td><td>Global</td></tr>
+        <tr><td>Founded</td><td>1946 (TC211: 1994)</td><td>1961 (TC287: 1993)</td><td>1994</td></tr>
+        <tr><td>Membership</td><td>National bodies, 165 countries</td><td>European national bodies</td><td>500+ individual members</td></tr>
+        <tr><td>Standards cost</td><td>Must be purchased</td><td>Must be purchased</td><td>Free of charge</td></tr>
+        <tr><td>Process</td><td>≥24 months</td><td>Similar to ISO</td><td>Faster via testbeds</td></tr>
+        <tr><td>Key standard</td><td>ISO 191xx series</td><td>Enacts ISO for Europe</td><td>WMS, WFS, WCS, etc.</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+</div>
+<div style="text-align:center;padding:2rem;color:#9ca3af;font-size:.85rem;">Good luck on the exam, Alin! 🍀 Geodata Infrastructures – TU Dresden</div>
+</body>
+</html>

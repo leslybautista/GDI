@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GDI Chapter 5 (Part 2) — Study Notes</title>
+<style>
+  :root{
+    --blue:#1d4ed8;--blue-l:#dbeafe;--blue-d:#1e3a5f;
+    --teal:#0f766e;--teal-l:#ccfbf1;
+    --purple:#6d28d9;--purple-l:#ede9fe;
+    --orange:#c2410c;--orange-l:#ffedd5;
+    --green:#15803d;--green-l:#dcfce7;
+    --red:#b91c1c;--red-l:#fee2e2;
+    --indigo:#3730a3;--indigo-l:#e0e7ff;
+    --rose:#be185d;--rose-l:#fce7f3;
+    --amber:#b45309;--amber-l:#fef3c7;
+    --gray:#374151;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;color:var(--gray);line-height:1.7;}
+  .hero{background:linear-gradient(135deg,#1e3a5f 0%,#6d28d9 45%,#0f766e 100%);color:white;padding:3rem 2rem;text-align:center;}
+  .hero h1{font-size:2.2rem;font-weight:900;margin-bottom:.5rem;}
+  .hero p{opacity:.85;font-size:1.05rem;}
+  .hero .cont{display:inline-block;margin-top:.75rem;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:.35rem 1rem;font-size:.88rem;}
+  .toc{max-width:1100px;margin:2rem auto;padding:0 1.5rem;}
+  .toc-card{background:white;border-radius:14px;padding:1.75rem;box-shadow:0 1px 6px rgba(0,0,0,.07);}
+  .toc-card h2{font-size:.9rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;margin-bottom:1rem;}
+  .toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.6rem;}
+  .toc-item{display:block;padding:.65rem 1rem;border-radius:8px;text-decoration:none;font-size:.9rem;font-weight:600;transition:all .15s;}
+  .toc-item:hover{filter:brightness(.93);}
+  main{max-width:1100px;margin:0 auto;padding:0 1.5rem 5rem;}
+  .chapter{margin-bottom:2.75rem;}
+  .ch-header{border-radius:14px 14px 0 0;padding:1.5rem 2rem;color:white;}
+  .ch-header h2{font-size:1.55rem;font-weight:800;margin-bottom:.25rem;}
+  .ch-header p{opacity:.85;font-size:.95rem;}
+  .ch-num{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;opacity:.7;margin-bottom:.4rem;}
+  .ch-body{background:white;border-radius:0 0 14px 14px;padding:2rem 2.25rem;box-shadow:0 2px 8px rgba(0,0,0,.07);}
+  h3{font-size:1.13rem;font-weight:800;margin:2rem 0 .7rem;padding-bottom:.4rem;border-bottom:2px solid #f1f5f9;}
+  h4{font-size:1rem;font-weight:700;margin:1.3rem 0 .5rem;color:#374151;}
+  p{margin-bottom:.85rem;}
+  ul,ol{margin:.5rem 0 .85rem 1.5rem;}
+  li{margin-bottom:.35rem;}
+  .def{background:#f8fafc;border-left:4px solid var(--blue);border-radius:0 8px 8px 0;padding:.9rem 1.2rem;margin:.85rem 0;font-size:.93rem;}
+  .def strong{color:var(--blue-d);}
+  .quote{background:#f8fafc;border-left:4px solid #9ca3af;border-radius:0 8px 8px 0;padding:.9rem 1.2rem;margin:.85rem 0;font-size:.92rem;color:#4b5563;font-style:italic;}
+  .alert{border-radius:10px;padding:.9rem 1.2rem;margin:.9rem 0;font-size:.9rem;}
+  .alert-blue{background:var(--blue-l);border-left:4px solid var(--blue);}
+  .alert-teal{background:var(--teal-l);border-left:4px solid var(--teal);}
+  .alert-orange{background:var(--orange-l);border-left:4px solid var(--orange);}
+  .alert-green{background:var(--green-l);border-left:4px solid var(--green);}
+  .alert-amber{background:var(--amber-l);border-left:4px solid var(--amber);}
+  .alert-rose{background:var(--rose-l);border-left:4px solid var(--rose);}
+  code{background:#f1f5f9;border:1px solid #e2e8f0;border-radius:4px;padding:.1em .4em;font-size:.84rem;font-family:'Courier New',monospace;}
+  table.ct{width:100%;border-collapse:collapse;margin:.9rem 0;font-size:.88rem;}
+  table.ct th{background:var(--blue-d);color:white;padding:.65rem 1rem;text-align:left;}
+  table.ct td{padding:.55rem 1rem;border-bottom:1px solid #e5e7eb;vertical-align:top;}
+  table.ct tr:nth-child(even) td{background:#f8fafc;}
+  table.ct tr:hover td{background:#f0f7ff;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;margin:.85rem 0;}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin:.85rem 0;}
+  .card{background:#f8fafc;border-radius:10px;padding:1.1rem 1.2rem;border:1px solid #e2e8f0;}
+  .card h4{margin-top:0;}
+  .op-row{display:flex;gap:.8rem;align-items:flex-start;margin-bottom:.65rem;padding:.75rem;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;}
+  .op-name{padding:.25rem .7rem;border-radius:6px;font-size:.78rem;font-weight:700;white-space:nowrap;color:white;flex-shrink:0;}
+  .op-desc{font-size:.9rem;line-height:1.55;}
+  .badge{display:inline-block;padding:.12rem .55rem;border-radius:999px;font-size:.73rem;font-weight:700;margin-right:.3rem;}
+  .badge-m{background:#fee2e2;color:#b91c1c;}
+  .badge-o{background:#dcfce7;color:#15803d;}
+  .badge-t{background:#ede9fe;color:#6d28d9;}
+  .step{display:flex;gap:.9rem;align-items:flex-start;margin-bottom:.65rem;}
+  .step-num{background:var(--blue-d);color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:800;flex-shrink:0;margin-top:.1rem;}
+  .step-body{font-size:.93rem;}
+  .step-body strong{display:block;margin-bottom:.15rem;}
+  .vp-row{display:flex;gap:.85rem;align-items:flex-start;margin-bottom:.7rem;padding:.8rem 1rem;background:#f8fafc;border-radius:8px;border-left:4px solid var(--indigo);}
+  .vp-label{font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--indigo);white-space:nowrap;min-width:120px;}
+  .chain-row{display:flex;gap:.85rem;align-items:flex-start;margin-bottom:.65rem;padding:.75rem;background:#f8fafc;border-radius:8px;border-left:4px solid var(--teal);}
+  .chain-label{font-size:.8rem;font-weight:800;color:var(--teal);white-space:nowrap;min-width:130px;}
+  @media(max-width:700px){
+    .grid-2,.grid-3{grid-template-columns:1fr;}
+    .hero h1{font-size:1.6rem;}
+    .ch-body{padding:1.25rem;}
+    .vp-label,.chain-label{min-width:auto;}
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>📡 GDI Chapter 5 — Part 2</h1>
+  <p>Integration · Discovery &amp; Metadata · Catalogue Services · Geoportals · Implementation Strategies</p>
+  <span class="cont">▸ Continuation of GDI_5-1 notes (Architectures · WMS · WFS · WCS · AAA · INSPIRE)</span>
+</div>
+
+<div class="toc">
+  <div class="toc-card">
+    <h2>Sections in this document</h2>
+    <div class="toc-grid">
+      <a class="toc-item" href="#transform" style="background:#ede9fe;color:#6d28d9;">5.4.1 Schema Transformation</a>
+      <a class="toc-item" href="#fusion" style="background:#ccfbf1;color:#0f766e;">5.4.2 Geodata Fusion</a>
+      <a class="toc-item" href="#metadata" style="background:#ffedd5;color:#c2410c;">5.5.1 Metadata</a>
+      <a class="toc-item" href="#csw" style="background:#dcfce7;color:#15803d;">5.5.2 Catalogue Services (CSW)</a>
+      <a class="toc-item" href="#geoportals" style="background:#fce7f3;color:#be185d;">5.6 Geoportals</a>
+      <a class="toc-item" href="#impl" style="background:#e0e7ff;color:#3730a3;">5.7 Implementation Strategies (RM-ODP)</a>
+    </div>
+  </div>
+</div>
+
+<main>
+
+<!-- 5.4.1 SCHEMA TRANSFORMATION -->
+<div class="chapter" id="transform">
+  <div class="ch-header" style="background:linear-gradient(90deg,#4c1d95,#6d28d9)">
+    <div class="ch-num">Section 5.4.1</div>
+    <h2>Integration — Transformation of Geodata into Common Models</h2>
+    <p>Schema Mapping · Schema Translation · Complexity Levels · Tools</p>
+  </div>
+  <div class="ch-body">
+
+    <h3>Types of Transformations</h3>
+    <div class="grid-2">
+      <div class="card"><h4>Coordinate Transformations</h4><p>Converting geometries between different CRS (e.g., Gauß-Krüger → ETRS89/UTM). Purely geometric — does not change the data model or attribute meaning.</p></div>
+      <div class="card"><h4>Schema Transformations</h4><p>Converting/transferring between different <em>conceptual data schemata</em>. Addresses structure and meaning, not just position. Three aspects:</p></div>
+    </div>
+    <div class="grid-3">
+      <div class="card"><h4>Syntactic aspect</h4><p>Change of data types or formats. Example: <code>double → real</code>, ASCII → Binary, CSV → GML encoding.</p></div>
+      <div class="card"><h4>Schematic aspect</h4><p>Change of data structure or conceptual model. Example: object-oriented → relational model, vector → raster.</p></div>
+      <div class="card"><h4>Semantic aspect</h4><p>Transformation of content/meaning. Example: ratio-scaled → ordinal-scaled, ATKIS land-use classes → INSPIRE land-use classes.</p></div>
+    </div>
+
+    <h3>Schema Mapping vs. Schema Translation</h3>
+    <div class="alert alert-amber"><strong>Key distinction:</strong> Schema Mapping = defining the rules (intellectual work, mostly still manual). Schema Translation = applying those rules to actually transform the data (automated). Both steps are always needed.</div>
+    <div class="grid-2">
+      <div class="card">
+        <h4>1. Schema Mapping</h4>
+        <p><strong>What:</strong> Deriving and defining the transformation rules, usually at the conceptual level — comparing UML diagrams and textual descriptions of feature types.</p>
+        <p><strong>Schema Matching</strong> = the (partly automated) search for correspondences between different schemata. A sub-step of mapping.</p>
+        <p>Preprocessing is still mostly manual. Tools support formalizing the mapping rules (e.g., FME, HALE).</p>
+      </div>
+      <div class="card">
+        <h4>2. Schema Translation</h4>
+        <p><strong>What:</strong> The automated data transformation from source schema to target schema, applying the defined mapping rules.</p>
+        <p>Tools: <strong>FME</strong> (Feature Manipulation Engine), <strong>HALE</strong> (Humboldt Alignment Editor, open source by WeTransform), Snowflake GO Publisher, ArcGIS for INSPIRE.</p>
+        <p>Can be batch (one-time), or demand-driven/ad-hoc (triggered by a query in real-time).</p>
+      </div>
+    </div>
+
+    <h3>Six Complexity Levels for Schema Mapping (Howard 2010)</h3>
+    <table class="ct">
+      <tr><th>Level</th><th>Operation</th><th>Example</th></tr>
+      <tr><td><strong>1</strong></td><td>Renaming classes and attributes</td><td>ALKIS <em>Flurstück</em> → INSPIRE <em>CadastralParcel</em> (same content, different name)</td></tr>
+      <tr><td><strong>2</strong></td><td>Simple attribute derivation</td><td>Convert area from m² to hectares; cast integer → string</td></tr>
+      <tr><td><strong>3</strong></td><td>Aggregating input records</td><td>Merge multiple road segments with same name into one continuous road feature</td></tr>
+      <tr><td><strong>4</strong></td><td>Complex derivation &amp; dynamic type selection</td><td>The INSPIRE feature type to use depends on the value of a source attribute (conditional logic)</td></tr>
+      <tr><td><strong>5</strong></td><td>Deriving values based on multiple features</td><td>Compute the "connectivity" attribute of a road by looking at neighboring road segments</td></tr>
+      <tr><td><strong>6</strong></td><td>Conflation &amp; model generalization</td><td>Merge road data from TT-SIB and ATKIS, resolving conflicts; generalize topology to INSPIRE level</td></tr>
+    </table>
+
+    <h3>Schema Mapping Operation Types (with INSPIRE Examples)</h3>
+    <ul>
+      <li><strong>Reduction:</strong> Deriving INSPIRE Cadastral Parcels from ALKIS Flurstücke, excluding all ownership attributes. (Source has more attributes than target — you throw some away.)</li>
+      <li><strong>Fusion:</strong> INSPIRE Transportation Networks enriched with data from Straßeninformationsbank (TT-SIB) + municipalities + public transport companies. (Multiple sources → one target dataset.)</li>
+      <li><strong>Selection:</strong> Using TT-SIB as source for INSPIRE higher-level road network rather than ATKIS, because TT-SIB covers motorways more comprehensively. (Choosing the best-fit source.)</li>
+    </ul>
+
+    <h3>Demand-Driven Schema Translation</h3>
+    <p>Rather than a one-time batch translation, it is possible to translate data on-demand: a user queries for INSPIRE data → the translation service queries the source (ATKIS) → returns translated results in real-time. Requirements: (1) fully formalized Schema Mapping, (2) automated Schema Translation with sufficient performance.</p>
+
+    <h3>Workflow: INSPIRE Data Provision in Saxony</h3>
+    <div class="step"><div class="step-num">1</div><div class="step-body"><strong>Identify candidate datasets</strong> — which existing datasets correspond to INSPIRE Annex topics?</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><strong>Determine INSPIRE datasets</strong> — check content and compliance (completeness, spatiotemporal coverage, thematic coverage, quality). Finding in Saxony: all identified datasets require transformation toward INSPIRE schemata.</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><strong>Define schema transformations</strong> — specify schema mapping rules using UML model comparison.</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><strong>Translate</strong> — run the automated translation using FME/HALE/etc.</div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body"><strong>Validate</strong> — use the INSPIRE Validator (inspire.ec.europa.eu/validator/) to confirm conformance with the target schema.</div></div>
+
+  </div>
+</div>
+
+<!-- 5.4.2 GEODATA FUSION -->
+<div class="chapter" id="fusion">
+  <div class="ch-header" style="background:linear-gradient(90deg,#065f46,#0f766e)">
+    <div class="ch-num">Section 5.4.2</div>
+    <h2>Integration — Fusion of Heterogeneous Geodata</h2>
+    <p>Object Matching · Similarity Measures · Service-Based Fusion · GDI Workflow</p>
+  </div>
+  <div class="ch-body">
+
+    <h3>What is Geodata Fusion?</h3>
+    <div class="quote"><strong>Yuan &amp; Tao (1999) — Conflation:</strong> "Combining information from two or more geo-datasets to make a master dataset that is superior to either source in either spatial or attribute aspect."</div>
+    <div class="quote"><strong>Bleiholder &amp; Naumann (2008):</strong> "Fusing multiple records representing the same real-world object into a single, consistent, and clean representation."</div>
+    <div class="quote"><strong>OWS Fusion Study (2009):</strong> "Combining or associating data/information regarding one or more entities to improve one's capability for detection, identification, or characterization of that entity."</div>
+
+    <h3>Levels and Classification of Geodata Fusion</h3>
+    <table class="ct">
+      <tr><th>Fusion Level</th><th>What is Fused</th><th>Example</th></tr>
+      <tr><td><strong>Signal / Sensor Fusion</strong></td><td>Raw sensor signals</td><td>Combining multispectral satellite bands into a false-color composite</td></tr>
+      <tr><td><strong>Data Fusion</strong></td><td>Data records</td><td>Combining GPS tracking data with loop detector counts for traffic analysis</td></tr>
+      <tr><td><strong>Information Fusion</strong></td><td>Interpreted information</td><td>Fusing different news channels to build a comprehensive event picture</td></tr>
+    </table>
+    <div class="grid-2">
+      <div class="card"><h4>Horizontal Fusion</h4><p>Joining datasets covering <em>different geographic areas</em> (no overlap). Challenge: boundary consistency — objects at the border may be inconsistently split or labeled across the boundary.</p></div>
+      <div class="card">
+        <h4>Vertical Fusion (focus of this lecture)</h4>
+        <p>Joining datasets covering <em>the same area</em> with different attributes or levels of detail. Subtypes:</p>
+        <ul>
+          <li><strong>Updating:</strong> replace outdated data with newer data</li>
+          <li><strong>Change Detection:</strong> identify what has changed between two time stamps</li>
+          <li><strong>Information Enrichment:</strong> add attributes from one source to features from another</li>
+          <li><strong>Data Integration:</strong> full merge into a superior, unified dataset</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>General Fusion Workflow</h3>
+    <div class="step"><div class="step-num">1</div><div class="step-body"><strong>Input Data</strong> — two or more source datasets covering the same phenomena.</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><strong>Pre-processing</strong> — subsetting, generalization, coordinate transformation to a common CRS. This is equivalent to the schema mapping/matching step. Covers Schema, Geometry, Topology, and Semantics aspects.</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><strong>Matching</strong> — identify homologous objects: which feature in dataset A represents the same real-world object as which feature in dataset B? Core intellectual challenge.</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><strong>Fusion</strong> — merge matched objects; resolve attribute conflicts; describe uncertainty about unmatched objects.</div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body"><strong>Post-processing</strong> — quality checks, consistency validation, final formatting.</div></div>
+    <div class="step"><div class="step-num">6</div><div class="step-body"><strong>Result</strong> — the fused, improved dataset.</div></div>
+
+    <h3>GDI Fusion Workflow (with Metadata)</h3>
+    <p>In a GDI context, the workflow is extended with metadata-driven steps: <strong>Discovery &amp; Evaluation</strong> (find fusion candidates via catalogue/metadata) → <strong>Compare &amp; Harmonise</strong> (coordinate transformations, schema alignment, generalisation) → <strong>Conflict Analysis</strong> (duplicate detection, change detection) → <strong>Matching</strong> (similarity measurement, link identification) → <strong>Data Fusion</strong> (merge, resolve conflicts, document uncertainty).</p>
+
+    <h3>Object Matching Strategies</h3>
+    <p>Object (feature) matching = finding <strong>homologous objects</strong> — features in different datasets that describe the same real-world phenomenon (e.g., the same road in ATKIS and OSM).</p>
+    <div class="grid-2">
+      <div class="card"><h4>Bottom-Up (Geometry-first)</h4><p>Common points → common edges → then validate with semantics. Best when geometry is reliable and precise.</p></div>
+      <div class="card"><h4>Top-Down (Semantics-first)</h4><p>Common semantic classes (e.g., "all local streets") → common edges → common points. Best when class definitions are clear.</p></div>
+    </div>
+    <p>In practice: both strategies are combined using a <strong>composite similarity score</strong> from three dimensions:</p>
+
+    <h4>Similarity Measures</h4>
+    <table class="ct">
+      <tr><th>Dimension</th><th>Measures</th></tr>
+      <tr><td><strong>Geometry</strong></td><td>Position, length, area, perimeter, sinuosity; percentage area overlap (optionally with tolerance buffers); <strong>Hausdorff distance</strong> = max. of minimal distances between two point sets (how far apart at worst case); <strong>Fréchet distance</strong> = measures similarity between two curves by considering the order of points (like a leash between a person and dog each walking one path)</td></tr>
+      <tr><td><strong>Topology</strong></td><td><strong>Round-Trip-Walk</strong>: compare the sequence of neighboring edges and nodes — if two road networks are homologous, their connectivity graph should be similar</td></tr>
+      <tr><td><strong>Semantics</strong></td><td>Numerical differences on attribute values; <strong>Damerau-Levenshtein distance</strong> between road names (counts character insertions, deletions, substitutions, transpositions); comparing XML tree structures; reasoning with thesauri/ontologies to bridge classification differences</td></tr>
+    </table>
+
+    <h4>Common Matching Problems</h4>
+    <div class="grid-2">
+      <div class="card"><h4>Different Representations</h4><p>The same road: single centerline in ATKIS vs. two parallel lines in a detailed cadastral dataset. Cannot be matched geometrically without understanding this representational difference.</p></div>
+      <div class="card"><h4>Different Segmentations</h4><p>Same continuous road split at different points in the two datasets — ATKIS splits at admin boundaries, OSM splits at intersections. Segment lengths and IDs are different.</p></div>
+      <div class="card"><h4>Missing Objects</h4><p>A small private road exists in OSM but not in ATKIS (ATKIS only captures roads of certain importance). No homologue to match to → "missing object" problem.</p></div>
+      <div class="card"><h4>Different Classifications</h4><p>The same road: "Hauptstraße" in ATKIS, "secondary" in OSM. Semantic mapping needed across different classification systems.</p></div>
+    </div>
+
+    <h3>Case Study: ATKIS + OSM Ad-Hoc Fusion (Wiemann &amp; Bernard 2010)</h3>
+    <ul>
+      <li><strong>Goal:</strong> Update and enrich ATKIS road data with VGI from OSM; test feasibility of service-based ad-hoc fusion in a GDI</li>
+      <li><strong>Service Architecture:</strong> Two WFS (ATKIS source + OSM source) → WPS (fusion processing) → WMS (visualization of fused results)</li>
+      <li><strong>Matching method:</strong> Additive confidence measure combining geometric + semantic similarity scores. Example weights:</li>
+    </ul>
+    <div class="card" style="font-size:.9rem;">
+      <strong>Confidence measure for ATKIS/OSM road matching:</strong>
+      +0.1 if bounding boxes intersect or distance &lt; 50m · +0.2 if angle difference &lt; π/10 · +0.1 if minimum geographic distance &lt; 50m · +0.1 if length difference &lt; 20m · +0.15 if Hausdorff distance &lt; 50m · +0.15 if topology relation is not disjoint · +0.2 if Damerau-Levenshtein distance between road names &lt; 4
+    </div>
+
+    <h3>Advanced: Linked Data for Fusion Relations (Wiemann &amp; Bernard 2015)</h3>
+    <p>Fusion relationships between homologous objects are stored persistently in a <strong>Triple Store</strong> (Linked Data / RDF). SPARQL queries then efficiently retrieve pre-computed matches. A UML data model formalizes the relations: <code>FeatureRelation</code> (with timestamp) links 2+ <code>FeatureResource</code> objects, associated with <code>RelationType</code> (is-same, sub-set, super-set…), <code>SimilarityMeasure</code>, and <code>ConfidenceMeasure</code>.</p>
+    <p><strong>Advantage:</strong> Avoids recomputing matches on every request. Supports incremental updates. Enables reasoning over the fusion network.</p>
+
+    <h3>Other Fusion Examples</h3>
+    <p><strong>Sensor + Satellite Data Fusion:</strong> In-situ air quality measurements (point-based, high temporal resolution, quality-assured) fused with satellite images (spatial coverage, coarse resolution) using spatial interpolation methods such as IDW + multiple regression, or Co-Kriging. Result: spatially complete air quality maps with high temporal frequency.</p>
+
+    <h3>Conclusion — Geodata Integration</h3>
+    <div class="alert alert-teal"><strong>Geodata Transformation:</strong> Translating between conceptual models — Schema Mapping (define rules, still mostly manual) + Schema Translation (apply rules automatically, tools: FME/HALE). Demand-driven translation is technically possible but requires fully formalized mapping.<br><br><strong>Geodata Fusion:</strong> Combining datasets to produce something better. Core challenge = object matching using geometry, topology, and semantic similarity. Schema transformation is often a prerequisite step in fusion. Role of metadata: helps discover fusion candidates, provides quality info, helps resolve semantic ambiguity.</div>
+
+  </div>
+</div>
+
+<!-- 5.5 METADATA & DISCOVERY -->
+<div class="chapter" id="metadata">
+  <div class="ch-header" style="background:linear-gradient(90deg,#7c2d12,#c2410c)">
+    <div class="ch-num">Section 5.5.1</div>
+    <h2>Discovery — Metadata for Geodata and GI Services</h2>
+    <p>ISO 19115 · Dublin Core · DCAT · Thesauri · GEMET</p>
+  </div>
+  <div class="ch-body">
+
+    <h3>Why Metadata and Discovery Services?</h3>
+    <p>INSPIRE requirements for discovery services: ability to find geodata and GI services by keywords, classifications (taxonomies), data quality, conformity with standards, spatial and temporal coverage, access/license conditions, responsible institutions. Ideally also: usability and fitness-for-purpose indicators.</p>
+
+    <h3>Three Roles of Metadata</h3>
+    <div class="grid-3">
+      <div class="card"><h4>1. Discovery</h4><p>Spatial/temporal coverage, keywords on topics, responsible institution. Helps users find datasets or services that might be relevant.</p></div>
+      <div class="card"><h4>2. Evaluation of Usability</h4><p>Geometry quality, thematic quality, scale/resolution, lineage. Helps users decide if a dataset is fit for their specific purpose.</p></div>
+      <div class="card"><h4>3. Integration Support</h4><p>Syntactic (formats, protocols, system environments), Semantic (CRS, classifications, vocabularies/thesauri, ontologies), and Legal (licensing, access conditions) aspects.</p></div>
+    </div>
+
+    <h3>Two Strategies for Metadata Organization</h3>
+    <div class="grid-2">
+      <div class="card">
+        <h4>Non-Structured Metadata (Google-style)</h4>
+        <ul><li>No standardized common schema; metadata not made explicit</li><li>Search engines auto-generate internal metadata from indexed web pages</li><li>✅ Fully automated acquisition</li><li>❌ Variable quality and completeness</li><li>❌ Only finds online, crawlable resources</li></ul>
+      </div>
+      <div class="card">
+        <h4>Structured Metadata (Catalogue-based)</h4>
+        <ul><li>Follows standardized schema; metadata made explicit and published</li><li>Catalogue applications allow structured discovery</li><li>Traditionally from library practice; standard approach for geodata</li><li>✅ Homogeneous quality (ideally); also covers non-online resources</li><li>❌ Generation/maintenance is mostly semi-automatic; needs human input</li></ul>
+      </div>
+    </div>
+
+    <h3>Prominent Metadata Standards</h3>
+    <table class="ct">
+      <tr><th>Standard</th><th>Scope</th><th>Key Points</th></tr>
+      <tr><td><strong>Dublin Core</strong> (ISO 15836)</td><td>Any digital resource</td><td>15 mandatory attributes for any digital data (documents, images, datasets). Includes a spatial coverage attribute. Widely used as a baseline. Not GI-specific.</td></tr>
+      <tr><td><strong>FGDC CSDGM</strong></td><td>Digital geospatial</td><td>Content Standard for Digital Geospatial Metadata by the US Federal Geographic Data Committee. One of the first GI-specific metadata standards.</td></tr>
+      <tr><td><strong>ISO 19115 / 19115-1:2014</strong></td><td>Geodata &amp; Services</td><td>Today THE international standard for Geo-Metadata. Extendable model. Minimal mandatory set to support discovery, assessment, usage, transfer. ISO 19139 = the XML encoding (different from GML). 2014 revision merged service metadata (formerly ISO 19119). Basis for INSPIRE Metadata Implementing Rule (EC Regulation 1205/2008).</td></tr>
+      <tr><td><strong>DCAT-AP / GeoDCAT-AP</strong></td><td>Open data portals</td><td>DCAT = Data Catalog Vocabulary (W3C). DCAT-AP.de = German open administrative data model. GeoDCAT-AP = extension for geographic metadata with transformation rules from ISO/INSPIRE. Growing in importance for Open Data initiatives.</td></tr>
+    </table>
+
+    <h4>ISO 19115 — Service Coupling Types (formerly ISO 19119)</h4>
+    <p>ISO 19115-1:2014 now covers metadata for GI services (previously in ISO 19119). Three coupling types between a service and its data:</p>
+    <ul>
+      <li><strong>Tightly coupled:</strong> service is permanently associated with a specific dataset instance. Metadata must describe both service AND the coupled data (using ISO 19115).</li>
+      <li><strong>Loosely coupled:</strong> service is not associated with specific data. Metadata describes the service interface only.</li>
+      <li><strong>Mixed:</strong> combination.</li>
+    </ul>
+
+    <h3>The "Chicken and Egg" Problem of Geo-Metadata</h3>
+    <div class="alert alert-orange">Data producers are typically reluctant to create, provide, and maintain good quality metadata. Without good metadata, users cannot find/evaluate data → the benefit of metadata is not experienced → no motivation to improve it. Circular. Today's GIS applications do not fully support automatic metadata generation (e.g., logging processing lineage). Open research challenges: better automatic metadata acquisition; incorporating user ratings; using lineage metadata to check for meaningful geoprocessing.</div>
+
+    <h4>Example: Meaningful Geoprocessing Using Metadata</h4>
+    <p>A practical example of metadata used to prevent errors: if metadata says a dataset is nominal/ordinal scaled (land use classes), then a geoprocessing tool should refuse to apply bilinear interpolation (which assumes ratio-scale data) and use nearest-neighbor instead. This check can be automated if the scale-level is stored in metadata.</p>
+
+    <h3>Thesauri for Semantic Interoperability</h3>
+    <div class="def"><strong>Thesaurus:</strong> A form of controlled vocabulary that minimizes semantic ambiguity by ensuring uniformity and consistency in the storage and retrieval of content objects. Provides: preferred terms, synonyms, broader terms, narrower terms, related terms, and definitions.</div>
+    <p><strong>Uses in GDI:</strong></p>
+    <ul>
+      <li>Generate standardized keywords as metadata entries → all data custodians use the same controlled terms</li>
+      <li>Support searches by also searching for synonyms or broader/narrower terms → searching "water quality" also finds datasets tagged with "nitrate", "dissolved oxygen" (narrower terms)</li>
+    </ul>
+    <div class="alert alert-teal"><strong>GEMET — GEneral Multilingual Environmental Thesaurus:</strong> Developed by the European Environment Agency for environmental data across Europe. Contains all INSPIRE Spatial Data Themes → used for harmonizing INSPIRE metadata keywords. Multilingual (all EU official languages). Each entry has a persistent URL, human-readable definition, broader/narrower/related terms, and links to other thesauri and descriptions. Available at: eionet.europa.eu/gemet.</div>
+
+  </div>
+</div>
+
+<!-- 5.5.2 CATALOGUE SERVICES -->
+<div class="chapter" id="csw">
+  <div class="ch-header" style="background:linear-gradient(90deg,#14532d,#15803d)">
+    <div class="ch-num">Section 5.5.2</div>
+    <h2>Catalogue Services — CSW &amp; OGC API Records</h2>
+    <p>OpenGIS CSW · CSW-T · INSPIRE Discovery · OGC API Records</p>
+  </div>
+  <div class="ch-body">
+
+    <h3>Catalogue Services Web (CSW)</h3>
+    <div class="def"><strong>CSW (OpenGIS Catalogue Service Web):</strong> OGC specification for interoperable geo-catalogue services. Current versions: 3.0 (2016) and 2.0.2 (2007). Protocol: HTTP GET/POST (and SOAP). Stateless. Follows the Publish-Find-Bind paradigm: data providers publish metadata, users find and evaluate resources, services are discovered and bound.</div>
+
+    <h4>Two Types of CSW</h4>
+    <div class="grid-2">
+      <div class="card"><h4>CSW (Read-Only)</h4><p>For discovery — requesting and querying metadata records. Does not support writing metadata. Operations: GetCapabilities, DescribeRecord, GetDomain, GetRecords, GetRecordById.</p></div>
+      <div class="card"><h4>CSW-T (Transactional)</h4><p>Adds write operations for storing metadata. Additional operations: <strong>Transaction</strong> (push) and <strong>Harvest</strong> (pull). Can insert, update, and delete metadata records.</p></div>
+    </div>
+
+    <h4>CSW Operations in Detail</h4>
+    <div class="op-row"><div class="op-name" style="background:#15803d">GetCapabilities</div><div class="op-desc"><span class="badge badge-m">Mandatory</span> Returns metadata about the CSW instance itself: name, provider, which operations are supported, which metadata schema is used, query capabilities. Analogous to WMS/WFS GetCapabilities.</div></div>
+    <div class="op-row"><div class="op-name" style="background:#15803d">DescribeRecord</div><div class="op-desc"><span class="badge badge-m">Mandatory</span> Returns a description of the metadata schema used by this catalogue. Analogous to WFS DescribeFeatureType — tells clients which attributes are available for querying and their data types.</div></div>
+    <div class="op-row"><div class="op-name" style="background:#15803d">GetDomain</div><div class="op-desc"><span class="badge badge-o">Optional</span> Provides information about the domains (min/max values, available discrete options) of specific metadata attributes — helps clients formulate meaningful queries (e.g., "which keywords are actually available?").</div></div>
+    <div class="op-row"><div class="op-name" style="background:#15803d">GetRecords</div><div class="op-desc"><span class="badge badge-m">Mandatory</span> The main search operation. Analogous to WFS GetFeature — query metadata using offered criteria. Response = list of matching metadata records. Can request sorted results. Can trigger a <strong>distributed search</strong> across linked catalogues.</div></div>
+    <div class="op-row"><div class="op-name" style="background:#15803d">GetRecordById</div><div class="op-desc"><span class="badge badge-m">Mandatory</span> Retrieve a specific metadata record by its unique ID. Used to display full metadata details after a user selects a result from GetRecords.</div></div>
+    <div class="op-row"><div class="op-name" style="background:#be185d">Transaction</div><div class="op-desc"><span class="badge badge-t">CSW-T only</span> <strong>Push mechanism</strong> — allows data custodians to insert, update, or delete metadata records in the catalogue database. Analogous to WFS Transaction.</div></div>
+    <div class="op-row"><div class="op-name" style="background:#be185d">Harvest</div><div class="op-desc"><span class="badge badge-t">CSW-T only</span> <strong>Pull mechanism</strong> — triggers the catalogue to automatically read/fetch metadata from other metadata holdings (by URI). Can be ad-hoc (synchronous) or scheduled at regular intervals (asynchronous, e.g., nightly). <strong>Harvesting solves distributed search performance issues</strong> by creating local copies.</div></div>
+
+    <h4>Distributed Search vs. Harvesting</h4>
+    <div class="grid-2">
+      <div class="card"><h4>Distributed Search</h4><p>A query is forwarded in real-time to multiple linked catalogue servers. Results are aggregated. Problems: slow if remote servers are unavailable or slow; overall response time depends on slowest server.</p></div>
+      <div class="card"><h4>Harvesting (Solution)</h4><p>Metadata from remote catalogues is pre-fetched and stored locally at regular intervals. Local queries run on locally cached data → fast, reliable. Tradeoff: slight lag — local data may be up to one harvesting interval old.</p></div>
+    </div>
+
+    <h4>Metadata Publishing in GDI Saxony (4 Channels)</h4>
+    <ol>
+      <li>Via a <strong>web editor</strong> — manual entry by data custodians</li>
+      <li><strong>Import from XML files</strong> — batch import of ISO 19139 XML documents</li>
+      <li><strong>Harvesting via CSW interfaces</strong> — automatic pull from other CSW servers</li>
+      <li><strong>Harvesting from an XML web folder</strong> — automatic pull from file directories on web servers</li>
+    </ol>
+
+    <h4>CSW ISO Profile</h4>
+    <p>Specifies how to use CSW with ISO 19115 metadata. Distinguishes resource types: Dataset, Dataset collection, Service (tightly/loosely/mixed coupled), and Application (web apps like a WMS client). This is the profile recommended by INSPIRE for discovery service implementations.</p>
+
+    <h3>INSPIRE Discovery Service</h3>
+    <p>INSPIRE defines a Discovery Service as a catalogue service for publication, search, evaluation, and usage of INSPIRE resources using metadata conforming to the INSPIRE Metadata Implementing Rule (ISO 19115 INSPIRE profile).</p>
+    <table class="ct">
+      <tr><th>INSPIRE Operation</th><th>Analogous to CSW</th><th>Description</th></tr>
+      <tr><td>Get Discovery Service Metadata</td><td>GetCapabilities</td><td>Returns service capabilities and metadata</td></tr>
+      <tr><td>Discover Metadata</td><td>GetRecords</td><td>Query INSPIRE metadata with search criteria; supports logical operators for combining multiple criteria</td></tr>
+      <tr><td>Publish Metadata</td><td>Transaction + Harvest</td><td>Insert/update/delete metadata (push or pull); both mechanisms required</td></tr>
+      <tr><td>Link Discovery Service</td><td>(no direct equivalent)</td><td>Declare availability of a Discovery Service while keeping metadata at owner's location; enables federated discovery without harvesting all data</td></tr>
+    </table>
+    <p><strong>INSPIRE minimum search criteria:</strong> keywords, topic category, spatial data service type, lineage, spatial resolution, specification (conformity), geographic bounding box, conditions for access and use, limitations on public access, responsible party and role.</p>
+    <div class="alert alert-blue"><strong>INSPIRE Discovery Service QoS (legally binding):</strong> Performance = first records returned within <strong>3 seconds</strong>. Capacity = <strong>30 parallel queries/second</strong>. Availability = <strong>99%</strong> (≤4 days/year downtime).</div>
+
+    <h3>CSW Discussion — Limitations</h3>
+    <ul>
+      <li>Service metadata can link <em>to</em> dataset metadata, but this is mostly <strong>unidirectional</strong> — it's hard to link from a dataset back to the services that can serve it</li>
+      <li><strong>Lineage/provenance</strong> metadata (the processing history of a dataset) is hardly supported in current CSW implementations</li>
+      <li>Distributed search performance issues exist → harvesting is the practical solution</li>
+      <li>Emerging Open Data portals use DCAT/GeoDCAT-AP — increasing convergence with traditional ISO/CSW approaches</li>
+    </ul>
+
+    <h3>OGC API – Records (Modern ROA Successor)</h3>
+    <p>A multi-part RESTful API specification for creating, modifying, and querying metadata records. The modern equivalent of CSW.</p>
+    <table class="ct">
+      <tr><th>Part</th><th>Status</th><th>What it provides</th></tr>
+      <tr><td><strong>Part 1: Core</strong></td><td>v1.0.0 published May 2025</td><td>Read-only access + simple queries. URL pattern: <code>/collections/{id}/items</code></td></tr>
+      <tr><td><strong>Part 2: Facets</strong></td><td>Draft March 2025</td><td>Richer faceted queries (by term, service type, temporal/numeric properties)</td></tr>
+      <tr><td><strong>Part 3: CRUD + Harvest</strong></td><td>Draft 2025</td><td>Create, replace, update, delete records + automated harvesting</td></tr>
+    </table>
+    <div class="alert alert-teal"><strong>CSW vs. OGC API Records:</strong> CSW = well-established, many interoperable implementations across Europe, INSPIRE-mandated. OGC API Records = simple and intuitive, browser-accessible, OpenAPI-based, searchable by general-purpose search engines. Market adoption developing — will be clearer in coming years.</div>
+
+  </div>
+</div>
+
+<!-- 5.6 GEOPORTALS -->
+<div class="chapter" id="geoportals">
+  <div class="ch-header" style="background:linear-gradient(90deg,#831843,#be185d)">
+    <div class="ch-num">Section 5.6</div>
+    <h2>Geoportals</h2>
+    <p>Requirements · Gazetteers · Access Control · Usability · Examples</p>
+  </div>
+  <div class="ch-body">
+
+    <h3>What is a Geoportal?</h3>
+    <p>A geoportal is a GDI application that integrates and groups the distributed information offerings within a GDI, providing a web-based user-facing entry point to geodata, services, and related applications. Geoportals may be directed to specific user groups and may offer APIs or tools for developing custom applications. They also reflect — and demonstrate — the development status of a GDI.</p>
+    <div class="alert alert-rose">Improving geoportal usability is receiving increasing attention. A geoportal's perceived quality directly depends on the quality of the underlying GDI services and data — a portal cannot overcome bad underlying QoS.</div>
+
+    <h3>Typical Geoportal Functional Requirements</h3>
+    <div class="grid-2">
+      <div class="card">
+        <h4>Discovery &amp; Search</h4>
+        <ul>
+          <li><strong>Metadata search</strong> via Web Catalogue Services (CSW)</li>
+          <li><strong>Place-based search</strong> using geographic names (Gazetteers)</li>
+          <li><strong>Keyword-based search</strong> using thesauri (e.g., GEMET)</li>
+          <li>Interactive exploration of discovered metadata (preview via WMS)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Service Combination &amp; Processing</h4>
+        <ul>
+          <li>Guided access to distributed GI services</li>
+          <li>Support for combining/coupling services (e.g., WPS for coordinate transformations, reclassifications)</li>
+          <li>Note: <em>truly guided service composition is hardly operational today</em></li>
+          <li>Positive exception: US GeoPlatform (geoplatform.gov) — a suite of tools for integrating and analyzing data</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Access Control (AAA)</h4>
+        <ul>
+          <li><strong>Authentication:</strong> verify user identity (who are you?)</li>
+          <li><strong>Authorization:</strong> control access rights (what are you allowed?)</li>
+          <li><strong>Accounting:</strong> usage tracking, billing, ordering</li>
+          <li>User profiles and personalized offerings</li>
+          <li>Geo-specific OGC specs exist (GeoXACML, OGC Digital Rights Management…) but have almost no practical uptake — general IT security standards are used instead</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Additional Resources &amp; Multilingualism</h4>
+        <ul>
+          <li>Links to web applications using the provided data/services</li>
+          <li>Documents, FAQs, links to other geoportals, legal information</li>
+          <li>Multilingual interfaces (mandatory for INSPIRE Geoportal across all EU languages)</li>
+          <li>Multilingual thesauri and gazetteers for cross-border search</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Gazetteers — Place-Based Search</h3>
+    <div class="def"><strong>Gazetteer:</strong> A digital geographical dictionary that links geographic names to geometries (and vice versa). Described by ISO 19112. Allows: name → coordinates (geocoding) and coordinates → name(s) (reverse geocoding).</div>
+    <p><strong>Characteristics of gazetteers:</strong></p>
+    <ul>
+      <li>Traditionally link to point geometries; modern gazetteers also link to lines and polygons</li>
+      <li><strong>Hierarchical organization</strong> of names → allows disambiguation (Dublin, Ireland vs. Dublin, Ohio, USA)</li>
+      <li>May offer <strong>alternative, multilingual, or historical names</strong> (Chemnitz ↔ Karl-Marx-Stadt; Köln ↔ Cologne)</li>
+      <li>Feature type classification (city, river, mountain, administrative unit)</li>
+      <li>Links are not necessarily unique — one name may correspond to multiple places</li>
+    </ul>
+    <p><strong>Examples:</strong></p>
+    <ul>
+      <li>Geocoding: "Helmholtzstraße 10, 01069 Dresden" → UTM point</li>
+      <li>Line lookup: "Elbe (River)" → polyline in Gauß-Krüger</li>
+      <li>Reverse geocoding: polygon 90% overlapping Saxony → "Sachsen, Deutschland"</li>
+    </ul>
+    <p><strong>Interoperability:</strong> OpenGIS Gazetteer WFS Profile (WFS-G) provides a standard API for gazetteers. Real examples: GeoNames (geonames.org, global, free, WGS84), NGA GEOnet Names Server (US DoD), BKG GeocorderPlus (Germany).</p>
+
+    <h3>INSPIRE Geoportal Architecture</h3>
+    <p>The EU INSPIRE Geoportal aggregates services from all EU member states. Components: Thesauri &amp; Translation service ↔ Catalogues (distributed CSW) → INSPIRE Geoportal UI ← Gazetteers (WFS). The portal accesses WFS (data), WMS (visualization), WCS (coverage data), and WCatS (catalogue search) from various national providers. Multilingualism is built in.</p>
+
+    <h3>Geoportal Usability</h3>
+    <p>Two key dimensions:</p>
+    <ol>
+      <li><strong>Functionality, performance, reliability</strong> — depends on underlying services and data quality. INSPIRE QoS requirements (WMS: 5s/470KB, 20 parallel requests/s, 99% availability) set minimum expectations. Users notice poor QoS immediately.</li>
+      <li><strong>User interface design</strong> — studied through user surveys and expert evaluations. Key finding from Geoportal Sachsen usability study: users strongly prefer a <em>single, central search field</em> over separate spatial and thematic search fields. Also: providing context about accuracy of coordinate calculations significantly improves information usability.</li>
+    </ol>
+
+    <h3>Geoportal Products</h3>
+    <table class="ct">
+      <tr><th>Product</th><th>Type</th><th>Notes</th></tr>
+      <tr><td><strong>GeoNetwork</strong></td><td>Open source</td><td>Used in GDI exercises; widely deployed in INSPIRE implementations; full CSW + catalogue capabilities</td></tr>
+      <tr><td><strong>Mapbender</strong></td><td>Open source</td><td>WMS client and portal framework; German origins</td></tr>
+      <tr><td><strong>Masterportal Hamburg</strong></td><td>Open source</td><td>Modern smart-city and open-data portal; increasingly adopted across German cities</td></tr>
+      <tr><td><strong>GeoServer CSW extension</strong></td><td>Open source extension</td><td>Adds catalogue service capabilities to GeoServer WFS/WMS server</td></tr>
+      <tr><td><strong>ESRI Geoportal Server</strong></td><td>Proprietary</td><td>Enterprise-grade portal server; widely used in government contexts</td></tr>
+      <tr><td><strong>CKAN spatial extension</strong></td><td>Open source extension</td><td>Adds spatial capabilities to CKAN (the open data portal platform); widely used in Open Data portals</td></tr>
+    </table>
+
+    <h3>Real Geoportal Examples</h3>
+    <table class="ct">
+      <tr><th>Geoportal</th><th>URL</th><th>Notes</th></tr>
+      <tr><td>INSPIRE EU Geoportal</td><td>inspire-geoportal.ec.europa.eu</td><td>Aggregates from all EU member states; multilingual; thematic overview by INSPIRE Annex</td></tr>
+      <tr><td>Geoportal.de</td><td>geoportal.de</td><td>German national GDI portal; links to all federal state portals and applications; redesigned 2020</td></tr>
+      <tr><td>GeoMIS Sachsen</td><td>geomis.sachsen.de</td><td>Saxony metadata catalogue; CSW ISO Profile; used in exercises</td></tr>
+      <tr><td>Géoportail France</td><td>geoportail.gouv.fr</td><td>French national portal by IGN; high-quality base cartography</td></tr>
+      <tr><td>US GeoPlatform</td><td>geoplatform.gov</td><td>Positive example of guided service composition and integration tools</td></tr>
+    </table>
+
+    <h3>Conclusion — Geoportals</h3>
+    <ul>
+      <li>Geoportals are GDI applications integrating distributed offerings for specific user groups</li>
+      <li>They are increasingly integrated with e-government and open data initiatives</li>
+      <li>They demonstrate the practical maturity of a GDI — usability reflects underlying data and service quality</li>
+      <li>Guided service composition (beyond simple search and display) remains a research and engineering challenge</li>
+    </ul>
+
+  </div>
+</div>
+
+<!-- 5.7 IMPLEMENTATION STRATEGIES -->
+<div class="chapter" id="impl">
+  <div class="ch-header" style="background:linear-gradient(90deg,#1e3a5f,#3730a3)">
+    <div class="ch-num">Section 5.7</div>
+    <h2>Implementation Strategies — Reference Models (RM-ODP)</h2>
+    <p>What is a Reference Model · 5 ODP Viewpoints · GI Service Chains · Worked Scenario</p>
+  </div>
+  <div class="ch-body">
+
+    <h3>What is a Reference Model?</h3>
+    <div class="quote"><strong>OASIS:</strong> "An abstract framework for understanding significant relationships among entities of some environment, for developing consistent standards. Not tied to specific technologies or implementations — provides common semantics across different implementations."</div>
+    <p>In the GDI context, reference models support the <strong>design, implementation, and documentation</strong> of distributed information systems by providing a structured framework and best practice examples. They are abstract enough to be technology-independent, but concrete enough to guide actual architecture choices.</p>
+
+    <h3>RM-ODP — Reference Model of Open Distributed Processing</h3>
+    <div class="def"><strong>ISO/IEC 10746 — RM-ODP:</strong> The most prominent reference model for GDI implementations. Defines 5 complementary viewpoints for describing a distributed system. Each viewpoint focuses on a different set of concerns and stakeholders, using different levels of abstraction. All 5 viewpoints together provide a complete description of the system.</div>
+    <p>Note: An earlier, related framework — the "4+1 View Model" (Kruchten 1995) — uses 4 views (Logical, Process, Development, Physical) plus a central Scenarios view. The ODP model extends and formalizes this thinking.</p>
+
+    <h3>The 5 RM-ODP Viewpoints</h3>
+    <div class="vp-row"><div class="vp-label">1. Enterprise / Business</div><div><strong>Management and user/usage perspective.</strong> Describes policies, roles, responsibilities, and high-level business processes. Answers: Who are the stakeholders? What are the organizational rules? How should data ownership and service operation be arranged — centrally or decentrally? Example for INSPIRE: three valid options — central operation (one authority runs everything), decentral operation (each data holder runs their own services), or mixed.</div></div>
+    <div class="vp-row"><div class="vp-label">2. Information</div><div><strong>Common data structures and semantics.</strong> Describes the data/information model — what data is exchanged and what does it mean? Based on ISO 19109 General Feature Model. Examples: AAA application schema (ALKIS/ATKIS definitions), INSPIRE Data Specifications (UML models of INSPIRE features). This is the "what does the data look like" viewpoint.</div></div>
+    <div class="vp-row"><div class="vp-label">3. Computational</div><div><strong>Abstract service interfaces and functions.</strong> Defines which service categories are needed and how they interact — without specifying technology. Based on ISO 19119 service categories. Also defines types of GI service chains. This is the "what services are needed and how do they communicate" viewpoint.</div></div>
+    <div class="vp-row"><div class="vp-label">4. Engineering / Technology</div><div><strong>Concrete technology and architecture.</strong> Specifies which OGC/ISO standards are used for each service component, interface specifications, collaboration and sequence diagrams. Also includes non-functional requirements (QoS, security). Example: for a routing system → WMS for visualization, WFS for road data, WPS for routing computation, GML for encoding, CSW for service discovery.</div></div>
+    <div class="vp-row" style="border-left-color:var(--orange)"><div class="vp-label" style="color:var(--orange);min-width:120px;">Cross-cutting</div><div><strong>Scenarios / Use Cases:</strong> Cross-cutting tool used throughout all viewpoints. Scenarios ground the design in concrete user tasks, drive the identification of required services (computational viewpoint), and communicate the system to non-technical stakeholders (enterprise viewpoint).</div></div>
+
+    <h3>ISO 19119 — GI Service Categories (Computational Viewpoint)</h3>
+    <table class="ct">
+      <tr><th>Category</th><th>Examples</th></tr>
+      <tr><td><strong>Human Interaction Services</strong></td><td>Spatial editing; displaying and querying geographic objects; browsing metadata; WMS client</td></tr>
+      <tr><td><strong>Model / Information Management</strong></td><td>Service instance metadata catalogue; service type registry; brokering and mediation between services</td></tr>
+      <tr><td><strong>Workflow / Task Management</strong></td><td>Workflow enactment service; service chain validation; resource reservation and co-allocation</td></tr>
+      <tr><td><strong>Geographic Processing Services</strong></td><td>Spatial analysis; coordinate transformation; geographic format conversion (WPS operations)</td></tr>
+      <tr><td><strong>System Management</strong></td><td>Authentication, authorization, payment; performance measurement; logging</td></tr>
+      <tr><td><strong>Communication</strong></td><td>Messaging; large data object transfer; remote file management; format conversions</td></tr>
+    </table>
+
+    <h3>Types of GI Service Chains (Computational Viewpoint)</h3>
+    <div class="chain-row"><div class="chain-label">User Defined Chaining<br><em>(transparent)</em></div><div><strong>The user manually searches, finds, and combines services.</strong> Full visibility and control. Example: a GIS expert uses GeoMIS Sachsen to find a WMS for flood data, then manually adds it to their GIS client. The user sees and controls every step.</div></div>
+    <div class="chain-row"><div class="chain-label">Workflow-Managed Chaining<br><em>(translucent)</em></div><div><strong>A Workflow Enactment Service manages execution of a pre-defined service chain.</strong> The user defines the workflow, the system executes it. Analogous to ArcGIS Model Builder or a BPEL workflow engine. User sees the workflow structure but not individual service call mechanics.</div></div>
+    <div class="chain-row"><div class="chain-label">Aggregate Service<br><em>(opaque)</em></div><div><strong>A black-box service hides all internal service composition.</strong> User only sees one interface — the internal chain of WFS + WPS + WMS etc. is completely hidden. Example: a routing web service that internally calls a road data WFS, a routing WPS, and a visualization WMS, but presents a single "Get Route" interface to the user.</div></div>
+
+    <h3>ODP Engineering Viewpoint — What it Must Specify</h3>
+    <ul>
+      <li><strong>Interface specifications</strong> for each service component (e.g., WMS 1.3.0 for visualization, WFS 2.0 for data access)</li>
+      <li><strong>Collaboration/sequence diagrams</strong> showing how services interact in time (which service calls which in what order)</li>
+      <li><strong>Non-functional requirements:</strong> QoS (performance, capacity, availability — as defined by INSPIRE), security (HTTPS, authentication), scalability, error handling</li>
+    </ul>
+
+    <h3>Worked Example Scenario: Cross-Border Foot-and-Mouth Disease (NRW, 2003)</h3>
+    <p>A classic pre-INSPIRE cross-border GDI use case scenario studied by TU Dresden / GDI NRW:</p>
+    <div class="grid-3">
+      <div class="card" style="border-top:3px solid var(--blue)">
+        <h4>Enterprise Viewpoint</h4>
+        <p>A Dutch veterinarian detects foot-and-mouth disease on a farm near the German border. They need to share location data with German colleagues for response planning. Two national GDIs (Dutch NCGI, German GDI NRW) must cooperate while maintaining data sovereignty.</p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--teal)">
+        <h4>Computational Viewpoint</h4>
+        <p>Required service categories: WMS (visualization), CSW (discovery), distributed catalogue search with cross-language query translation (Dutch ↔ German ↔ English). Service chain type: <strong>User Defined Chaining</strong> — the German veterinarian manually finds and combines WMS layers from both countries.</p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--purple)">
+        <h4>Engineering Viewpoint</h4>
+        <p>Step by step: German vet opens CSW client → queries GDI NRW CSW for WMS on "Gelderland, Maul-und-Klauen-Seuche" → distributed search forwards query to Dutch CSW (NCGI, Amsterdam) → Dutch WMS URL returned → WMS URL added to map client → further WMS layers added (Dortmund, Bonn, Amsterdam) → composite cross-border map ready.</p>
+      </div>
+    </div>
+
+    <h3>Conclusions on Reference Models</h3>
+    <ul>
+      <li>RM-ODP's 5 viewpoints provide a complete, layered design framework from business requirements to concrete technology choices</li>
+      <li>Typically: Information viewpoint → ISO 19xxx feature model; Computational viewpoint → SOA design with OGC Web Services</li>
+      <li>Scenarios/use cases are essential for driving and communicating requirements at all viewpoints</li>
+      <li>Iterative user requirement analysis plays a central role throughout the design process</li>
+      <li>The approach is consistent with how INSPIRE's own architecture is documented (INSPIRE Network Services Architecture v3.0)</li>
+    </ul>
+
+  </div>
+</div>
+
+<!-- CHAPTER SUMMARY TABLE -->
+<div class="chapter">
+  <div class="ch-header" style="background:linear-gradient(135deg,#1e3a5f,#6d28d9,#0f766e)">
+    <div class="ch-num">Complete Chapter 5 Overview</div>
+    <h2>All Sections at a Glance</h2>
+    <p>GDI_5-1 (Part 1) + GDI_5-2 (Part 2)</p>
+  </div>
+  <div class="ch-body">
+    <table class="ct">
+      <tr><th>Section</th><th>File</th><th>Core Topics</th><th>Key Standards &amp; Tools</th></tr>
+      <tr><td><strong>5.1 Software Architectures</strong></td><td>GDI_5-1</td><td>Layered systems, SOA, REST/ROA, OpenAPI, Linked Data</td><td>HTTP, XML, WSDL, SOAP, REST, RDF, SPARQL, OpenAPI 3.1</td></tr>
+      <tr><td><strong>5.2 Visualization</strong></td><td>GDI_5-1</td><td>WMS, WMTS, SLD, INSPIRE View QoS</td><td>WMS 1.3.0 (ISO 19128), EPSG:4326 vs CRS:84, SLD/SE, OGC API Maps</td></tr>
+      <tr><td><strong>5.3 Access &amp; Encodings</strong></td><td>GDI_5-1</td><td>WFS, WCS, GML, GeoJSON, GeoPackage</td><td>WFS 2.0 (ISO 19142), FES 2.0, WCS 2.0, GML/ISO 19136, GeoPackage OGC</td></tr>
+      <tr><td><strong>5.3 AAA / INSPIRE Data Specs</strong></td><td>GDI_5-1</td><td>AFIS/ALKIS/ATKIS, NAS, GeoInfoDok, INSPIRE data specs</td><td>GML application schemas, AdV, FME, INSPIRE Implementing Rules</td></tr>
+      <tr><td><strong>5.4 Integration</strong></td><td>GDI_5-2</td><td>Schema Transformation, Geodata Fusion, Object Matching</td><td>FME, HALE, Howard 6 levels, Hausdorff/Fréchet distance, confidence measures</td></tr>
+      <tr><td><strong>5.5 Discovery &amp; Metadata</strong></td><td>GDI_5-2</td><td>ISO 19115, Dublin Core, DCAT, Thesauri, CSW, OGC API Records</td><td>ISO 19115-1:2014, ISO 19139, GEMET, CSW 2.0/3.0, OGC API Records 1.0 (2025)</td></tr>
+      <tr><td><strong>5.6 Geoportals</strong></td><td>GDI_5-2</td><td>Discovery, Gazetteers, AAA, Usability, Products</td><td>WFS-G, GeoNetwork, INSPIRE Geoportal, GeoMIS Sachsen, ISO 19112</td></tr>
+      <tr><td><strong>5.7 Implementation Strategies</strong></td><td>GDI_5-2</td><td>RM-ODP, 5 viewpoints, GI service chains, design scenarios</td><td>ISO/IEC 10746 (RM-ODP), ISO 19119 (service categories), Publish-Find-Bind</td></tr>
+    </table>
+  </div>
+</div>
+
+</main>
+</body>
+</html>

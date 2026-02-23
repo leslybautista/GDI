@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GDI Chapter 5 — Study Notes</title>
+<style>
+  :root{
+    --blue:#1d4ed8; --blue-l:#dbeafe; --blue-d:#1e3a5f;
+    --teal:#0f766e; --teal-l:#ccfbf1;
+    --purple:#6d28d9; --purple-l:#ede9fe;
+    --orange:#c2410c; --orange-l:#ffedd5;
+    --green:#15803d; --green-l:#dcfce7;
+    --red:#b91c1c; --red-l:#fee2e2;
+    --indigo:#3730a3; --indigo-l:#e0e7ff;
+    --gray:#374151; --gray-l:#f8fafc;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;color:var(--gray);line-height:1.7;}
+  .hero{background:linear-gradient(135deg,#1e3a5f 0%,#1d4ed8 55%,#0f766e 100%);color:white;padding:3rem 2rem;text-align:center;}
+  .hero h1{font-size:2.2rem;font-weight:900;margin-bottom:.5rem;}
+  .hero p{opacity:.85;font-size:1.05rem;}
+  .toc{max-width:1100px;margin:2rem auto;padding:0 1.5rem;}
+  .toc-card{background:white;border-radius:14px;padding:1.75rem;box-shadow:0 1px 6px rgba(0,0,0,.07);}
+  .toc-card h2{font-size:1rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;margin-bottom:1rem;}
+  .toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.6rem;}
+  .toc-item{display:block;padding:.6rem 1rem;border-radius:8px;text-decoration:none;font-size:.9rem;font-weight:600;transition:all .15s;}
+  main{max-width:1100px;margin:0 auto;padding:0 1.5rem 4rem;}
+  .chapter{margin-bottom:2.5rem;}
+  .ch-header{border-radius:14px 14px 0 0;padding:1.5rem 2rem;color:white;}
+  .ch-header h2{font-size:1.5rem;font-weight:800;margin-bottom:.25rem;}
+  .ch-header p{opacity:.85;font-size:.95rem;}
+  .ch-body{background:white;border-radius:0 0 14px 14px;padding:2rem;box-shadow:0 2px 8px rgba(0,0,0,.07);}
+  h3{font-size:1.15rem;font-weight:800;margin:1.75rem 0 .75rem;padding-bottom:.4rem;}
+  h4{font-size:1rem;font-weight:700;margin:1.25rem 0 .5rem;}
+  p{margin-bottom:.8rem;}
+  ul,ol{margin:.5rem 0 .8rem 1.5rem;}
+  li{margin-bottom:.3rem;}
+  .def{background:#f8fafc;border-left:4px solid var(--blue);border-radius:0 8px 8px 0;padding:.9rem 1.1rem;margin:.8rem 0;font-size:.93rem;}
+  .def strong{color:var(--blue-d);}
+  .alert{border-radius:10px;padding:.9rem 1.2rem;margin:.9rem 0;font-size:.9rem;}
+  .alert-blue{background:var(--blue-l);border-left:4px solid var(--blue);}
+  .alert-teal{background:var(--teal-l);border-left:4px solid var(--teal);}
+  .alert-orange{background:var(--orange-l);border-left:4px solid var(--orange);}
+  .alert-green{background:var(--green-l);border-left:4px solid var(--green);}
+  .alert-purple{background:var(--purple-l);border-left:4px solid var(--purple);}
+  .alert-red{background:var(--red-l);border-left:4px solid var(--red);}
+  code{background:#f1f5f9;border:1px solid #e2e8f0;border-radius:4px;padding:.1em .4em;font-size:.85rem;font-family:'Courier New',monospace;}
+  .code-block{background:#1e293b;color:#e2e8f0;border-radius:10px;padding:1.1rem 1.3rem;font-size:.83rem;font-family:'Courier New',monospace;margin:.9rem 0;overflow-x:auto;white-space:pre;}
+  .compare-table{width:100%;border-collapse:collapse;margin:.9rem 0;font-size:.88rem;}
+  .compare-table th{background:var(--blue-d);color:white;padding:.6rem .9rem;text-align:left;}
+  .compare-table td{padding:.55rem .9rem;border-bottom:1px solid #e5e7eb;vertical-align:top;}
+  .compare-table tr:nth-child(even) td{background:#f8fafc;}
+  .compare-table tr:hover td{background:#f0f7ff;}
+  .badge{display:inline-block;padding:.15rem .55rem;border-radius:999px;font-size:.75rem;font-weight:700;margin-right:.25rem;}
+  .badge-blue{background:var(--blue-l);color:var(--blue);}
+  .badge-teal{background:var(--teal-l);color:var(--teal);}
+  .badge-green{background:var(--green-l);color:var(--green);}
+  .badge-orange{background:var(--orange-l);color:var(--orange);}
+  .badge-red{background:var(--red-l);color:var(--red);}
+  .badge-purple{background:var(--purple-l);color:var(--purple);}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:.8rem 0;}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin:.8rem 0;}
+  .card{background:#f8fafc;border-radius:10px;padding:1.1rem;border:1px solid #e2e8f0;}
+  .card h4{margin-top:0;}
+  .op-row{display:flex;gap:.75rem;align-items:flex-start;margin-bottom:.6rem;padding:.7rem;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;}
+  .op-name{background:var(--blue-d);color:white;padding:.2rem .65rem;border-radius:6px;font-size:.8rem;font-weight:700;white-space:nowrap;}
+  .op-name.teal{background:var(--teal);}
+  .op-name.purple{background:var(--purple);}
+  .op-name.green{background:var(--green);}
+  .op-name.orange{background:var(--orange);}
+  .op-desc{font-size:.9rem;}
+  @media(max-width:700px){
+    .grid-2,.grid-3{grid-template-columns:1fr;}
+    .hero h1{font-size:1.6rem;}
+    .ch-body{padding:1.25rem;}
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>📡 GDI Chapter 5 — Methods for Distributed Geoinformation</h1>
+  <p>Software Architectures · Visualization (WMS) · Data Access (WFS/WCS/GML) · AAA · INSPIRE Data Specs</p>
+</div>
+
+<!-- TOC -->
+<div class="toc">
+  <div class="toc-card">
+    <h2>Contents</h2>
+    <div class="toc-grid">
+      <a class="toc-item" href="#arch" style="background:#dbeafe;color:#1d4ed8;">5.1 Software Architectures</a>
+      <a class="toc-item" href="#vis" style="background:#ccfbf1;color:#0f766e;">5.2 Visualization / WMS</a>
+      <a class="toc-item" href="#access" style="background:#ede9fe;color:#6d28d9;">5.3 Access &amp; Encodings</a>
+      <a class="toc-item" href="#wfs" style="background:#ffedd5;color:#c2410c;">5.4 WFS — Feature Access</a>
+      <a class="toc-item" href="#wcs" style="background:#fee2e2;color:#b91c1c;">5.5 WCS — Coverage Access</a>
+      <a class="toc-item" href="#aaa" style="background:#dcfce7;color:#15803d;">5.6 AAA Model</a>
+      <a class="toc-item" href="#inspire" style="background:#e0e7ff;color:#3730a3;">5.7 INSPIRE Data Specs</a>
+    </div>
+  </div>
+</div>
+
+<main>
+
+<!-- ===== 5.1 SOFTWARE ARCHITECTURES ===== -->
+<div class="chapter" id="arch">
+  <div class="ch-header" style="background:linear-gradient(90deg,#1e3a5f,#1d4ed8)">
+    <h2>5.1 Software Architectures for GDI</h2>
+    <p>Motivation · Layered Systems · Tight vs Loose Coupling · SOA · REST/ROA · Linked Data · OpenAPI</p>
+  </div>
+  <div class="ch-body">
+
+    <h3>Why Architectures?</h3>
+    <p>Software architectures serve to <strong>structure complex systems</strong>, communicate design decisions, coordinate development, and enable cost reduction through component reuse and easier maintenance. The architect knows what to do, when, and how — analogous to construction blueprints.</p>
+    <div class="def">
+      <strong>Definition (Bass et al. 2003):</strong> "The software architecture of a system comprises its software components, the externally visible properties of those components, and the relationships among them."
+    </div>
+    <div class="def">
+      <strong>Origin (Brooks &amp; Iverson, 1969):</strong> "Architecture tells <em>what</em> happens; implementation tells <em>how</em> it is made to happen."
+    </div>
+    <p>Two main goals for distributed systems: <strong>platform independence</strong> (independence from hardware/software platforms) and <strong>reusability</strong> (for different tasks and purposes).</p>
+
+    <h3>Layered Systems</h3>
+    <p>Layering is a fundamental principle of all distributed systems. Each layer encapsulates and abstracts the layer below it, with well-defined interfaces between layers.</p>
+    <div class="grid-3">
+      <div class="card"><h4>2-tier (since 1980s)</h4><p>Client (UI + process mgmt) ↔ Server (DBMS + process mgmt). Classic client/server.</p></div>
+      <div class="card"><h4>3-tier (since 1990s)</h4><p>Client (UI) ↔ Application Server (business logic, middleware) ↔ Data Server (DBMS). Foundation of most today's GIS.</p></div>
+      <div class="card"><h4>ISO OSI Model</h4><p>7-layer network model. Example of strict layering: layer n may only access layer n-1.</p></div>
+    </div>
+    <div class="alert alert-blue">
+      <strong>Java Example:</strong> Java Program → Java API + Compiler → Java Virtual Machine → OS (Linux/Windows/...). The JVM is the "layer" that provides platform independence.
+    </div>
+    <p><strong>Forms of layering:</strong> <em>Strictly layered</em> (layer n may only access layer n-1) vs. <em>non-strictly layered</em> (can skip layers). Strictly layered = more disciplined, better encapsulation.</p>
+
+    <h3>Tight vs. Loose Coupling</h3>
+    <p>Traditional communication was based on sockets or remote procedure calls (RPC) — OS-dependent, tedious to implement, non-interoperable. Today, two paradigms:</p>
+    <table class="compare-table">
+      <tr><th>Aspect</th><th>Tight Coupling</th><th>Loose Coupling</th></tr>
+      <tr><td>Resources known beforehand</td><td>✅ Yes, well-known</td><td>❌ Not (or hardly) known</td></tr>
+      <tr><td>Data encoding</td><td>Well-known, defined upfront</td><td>Self-described / self-contained</td></tr>
+      <tr><td>Scope</td><td>Mostly Intranet (behind firewall)</td><td>Internet (cross-institutional)</td></tr>
+      <tr><td>State</td><td>Often stateful; near-real-time OK</td><td>Stateless (mostly)</td></tr>
+      <tr><td>Technologies</td><td>CORBA, DCOM, Java RMI</td><td>HTTP/GET, HTTP/POST, XML, SOAP, WSDL</td></tr>
+      <tr><td>Use case</td><td>Within a company, time-critical apps</td><td>Across institutions, GDI services</td></tr>
+    </table>
+
+    <h3>Service Oriented Architecture (SOA)</h3>
+    <p>Goal: <strong>Dynamic system integration</strong> — coupling application components (services) at runtime. Services offer their functionality through well-defined interfaces via a network.</p>
+    <div class="def">
+      <strong>Publish-Find-Bind Paradigm:</strong> (1) <em>Service Provider</em> publishes service description to a <em>Service Registry</em>. (2) <em>Service Requestor</em> finds the service in the registry. (3) Requestor binds to and calls the provider directly.
+    </div>
+    <h4>SOA Technologies</h4>
+    <div class="grid-2">
+      <div class="card">
+        <h4>🔤 XML — Extensible Markup Language</h4>
+        <ul>
+          <li>Data in hierarchical text file structure (object tree)</li>
+          <li><strong>XML Schema</strong>: describes structure and data types (own XML dialect)</li>
+          <li><strong>XML Namespace</strong>: uniquely named elements (e.g., <code>xmlns="http://earth.google.com/kml/2.0"</code>)</li>
+          <li><strong>XSLT</strong>: transformation rules between XML dialects or to HTML/PDF</li>
+          <li>Prominent dialects: SVG, GML, KML, WSDL</li>
+          <li>Well-formed = conforms to basic XML syntax (properly nested, one root)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>📋 WSDL — Web Services Description Language</h4>
+        <ul>
+          <li>XML spec for describing web services (service metadata)</li>
+          <li>Platform-, language-, and protocol-independent</li>
+          <li>Typically auto-generated in development environments</li>
+          <li>Client reads WSDL → knows which functions are available</li>
+          <li>Combined with SOAP + XML Schema for full SOA stack</li>
+        </ul>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h4>🌐 HTTP — HyperText Transfer Protocol</h4>
+        <ul>
+          <li><strong>GET</strong>: data + query in URL as Key-Value Pairs (KVPs): <code>KEY=value&amp;KEY2=val2</code>. Limited URL length. '?' separates URL from query, '&amp;' separates KVPs.</li>
+          <li><strong>POST</strong>: data sent separately (usually as XML). Handles larger data volumes.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>📦 SOAP — Simple Object Access Protocol</h4>
+        <ul>
+          <li>Originally acronym (now just "SOAP")</li>
+          <li>Can use any transport protocol, but usually HTTP</li>
+          <li>SOAP message is an XML file: <strong>Envelope</strong> → <strong>Header</strong> (meta-info for server) + <strong>Body</strong> (actual request/response) + optional <strong>Attachment</strong></li>
+          <li>Sent as HTTP/POST request</li>
+          <li>Currently recommended for INSPIRE services</li>
+          <li>Criticized for being too generic and complex</li>
+        </ul>
+      </div>
+    </div>
+    <h4>Registries</h4>
+    <p>Original plan: UDDI (Universal Description, Discovery and Integration) as "yellow pages" for web services — stopped in 2006. Today, multiple co-existing approaches:</p>
+    <ul>
+      <li><strong>GI specific</strong>: OGC Catalogue Services (CSW) + ISO 19115/19 metadata; OGC API – Records; STAC (SpatioTemporal Asset Catalogs)</li>
+      <li><strong>Open data</strong>: DCAT (Data Catalog Vocabulary); GeoDCAT-AP (for European data portals)</li>
+    </ul>
+    <h4>Stateful vs. Stateless Communication</h4>
+    <table class="compare-table">
+      <tr><th></th><th>Stateful</th><th>Stateless</th></tr>
+      <tr><td>Server behavior</td><td>Memorizes prior requests; knows context of a session</td><td>Each request is treated as new; full context must be in each request</td></tr>
+      <tr><td>Server mechanism</td><td>Sessions/cookies required</td><td>No session logging needed</td></tr>
+      <tr><td>Security</td><td>More security concerns (cookies)</td><td>Fewer security issues</td></tr>
+      <tr><td>GDI usage</td><td>More complex client development</td><td>Preferred for GDI (WMS, WFS, WCS are all stateless)</td></tr>
+    </table>
+
+    <h3>REST / Resource Oriented Architecture (ROA)</h3>
+    <div class="def"><strong>REST (Fielding 2000):</strong> Representational State Transfer — architectural style for distributed hypermedia systems. Principles: stateless communication, simple protocols (GET/POST/PUT), access to resources via unique URIs, resources are hypertext references.</div>
+    <table class="compare-table">
+      <tr><th></th><th>SOA</th><th>REST/ROA</th></tr>
+      <tr><td>Coupling</td><td>Loosely coupled (within common domain)</td><td>Even more loosely coupled</td></tr>
+      <tr><td>Data format</td><td>XML (more overhead, richer)</td><td>JSON or similar (lighter)</td></tr>
+      <tr><td>State</td><td>Stateful or stateless</td><td>Always stateless</td></tr>
+      <tr><td>Focus</td><td>Sharing functionalities / methods</td><td>Data exchange / resources</td></tr>
+      <tr><td>Complexity</td><td>Higher (WSDL, SOAP, etc.)</td><td>Lower (just URIs + HTTP)</td></tr>
+      <tr><td>GDI examples</td><td>Traditional OGC Services (WMS, WFS, WCS)</td><td>OGC API family (new standards)</td></tr>
+      <tr><td>Use case</td><td>Complex distributed apps, enterprise</td><td>Mash-ups, web apps, open data</td></tr>
+    </table>
+    <div class="alert alert-teal"><strong>Key insight:</strong> SOA and REST/ROA are <strong>complementary</strong> — a SOA-based system can be linked into REST-based systems and vice versa. The differences are not as large as early debates suggested.</div>
+
+    <h3>OpenAPI</h3>
+    <p>OpenAPI Specification (OAS) is an industry standard for RESTful API design. Originally based on Swagger 2.0 (donated by SmartBear, 2015), maintained by the OpenAPI Initiative (OAI). Current version: OAS v3.1.0 (Feb 2021).</p>
+    <ul>
+      <li>HTTP-based, non-proprietary, formally described, machine- and human-readable</li>
+      <li>Described in JSON or YAML format</li>
+      <li>Server and client code can be auto-generated from an OpenAPI Document</li>
+    </ul>
+    <p>An OpenAPI document contains: <code>openapi</code> (version), <code>info</code> (title + version), <code>paths</code> (endpoints with parameters and responses), <em>Operation Objects</em> (summary, parameters, payload, possible responses), <em>Responses Object</em> (HTTP response codes + meanings).</p>
+    <p>Huge tool support: code generation, validation, documentation, Swagger editor, converters.</p>
+    <div class="alert alert-blue"><strong>OGC Context:</strong> Traditional OGC Services (WMS, WFS, WCS) are SOA-based. The new OGC API family (OGC API – Maps, Features, Tiles, Styles, Coverages) is ROA/OpenAPI-based. Old services date from ~2000; OGC APIs first became available in 2021.</div>
+    <p><strong>Why traditional OGC services are not enough (W3C, 2017):</strong> Non-expert users can't just "follow links"; queries are complex and require domain knowledge; search engines cannot index OGC Web service content (only catalogue services intended for GDI discovery, not general-purpose web).</p>
+
+    <h3>Linked Data</h3>
+    <div class="def"><strong>Web evolution:</strong> Web of documents (1989-200x): HTML pages linked via hyperlinks. → Semantic Web &amp; Linked Data (Berners-Lee, 2006): data-oriented, using common ontologies, goal to publish open data that can easily be combined.</div>
+    <p><strong>Linked Data Principles (Berners-Lee):</strong></p>
+    <ol>
+      <li>Use <strong>URIs</strong> to identify objects (and use HTTP URIs so they can be looked up)</li>
+      <li>Data provided using <strong>RDF</strong> (Resource Description Framework — an XML dialect)</li>
+      <li>Links lead to common vocabularies or other related objects/data (also RDF-based)</li>
+    </ol>
+    <h4>RDF Triples</h4>
+    <p>Linked Data describes everything as <strong>Subject – Predicate – Object</strong> triples:</p>
+    <div class="code-block">Example: Helmholtzstraße  geo:sfIntersects  Georg-Bähr-Straße
+(Subject URI)      (Predicate/vocab)   (Object URI)
+
+The geometry is stored as a literal (GML string) attached to each object.</div>
+    <p><strong>SPARQL</strong>: query language for Linked Data (analogous to SQL for relational databases). The <strong>Linked Open Data Cloud</strong> (May 2020): 1,269 datasets with 16,201 links. Geography nodes include OSM, NUTS, Ordnance Survey Linked Data.</p>
+    <div class="alert alert-orange"><strong>GDI Conclusion:</strong> Linked Data is high implementation complexity, low domain dependence (very open). Useful for open data initiatives. However, usefulness for large GI datasets (like remote sensing) not yet fully clear — huge data volumes are problematic.</div>
+
+    <h3>Architecture Overview Comparison</h3>
+    <table class="compare-table">
+      <tr><th>Architecture</th><th>View</th><th>Coupling</th><th>GDI Use</th><th>Complexity</th></tr>
+      <tr><td><strong>SOA</strong></td><td>Functional — services</td><td>Loose (within domain)</td><td>Traditional OGC Services — well established, basis of current aGDI</td><td>High</td></tr>
+      <tr><td><strong>ROA</strong></td><td>Everything is a resource</td><td>Very loose (mash-ups)</td><td>New OGC API Standards — modern web APIs</td><td>Medium</td></tr>
+      <tr><td><strong>Linked Data</strong></td><td>Data publishing via URIs</td><td>Via links</td><td>Some open data initiatives — usefulness for large GI datasets unclear</td><td>Low (but limited)</td></tr>
+    </table>
+
+  </div>
+</div>
+
+<!-- ===== 5.2 VISUALIZATION / WMS ===== -->
+<div class="chapter" id="vis">
+  <div class="ch-header" style="background:linear-gradient(90deg,#065f46,#0f766e)">
+    <h2>5.2 Visualization of Geoinformation — WMS &amp; OGC API Maps</h2>
+    <p>Web Map Service · WMTS · Styled Layer Descriptor · OGC API Maps/Tiles/Styles</p>
+  </div>
+  <div class="ch-body">
+
+    <h3>Requirements for Visualization Services</h3>
+    <p>From INSPIRE View Services requirements:</p>
+    <ul>
+      <li>Digital cartographic visualization of vector and raster data</li>
+      <li>Access via the internet, easy combination of distributed services</li>
+      <li>Access to further meta- and attribute data of visualized objects</li>
+      <li>No advanced requirements for the client — <strong>thin client</strong> ideal; visualization directly in browser</li>
+      <li>Main part of rendering happens at the <strong>server side</strong></li>
+    </ul>
+
+    <h3>Web Map Service (WMS)</h3>
+    <div class="def"><strong>WMS:</strong> First version ~2000. Current: WMS 1.3.0 (OGC 06-042 from 2006; also ISO 19128). A WMS returns rendered <em>images</em> (not raw data). It is a <strong>stateless service</strong> using HTTP GET and POST.</div>
+    <h4>Two Types of WMS</h4>
+    <div class="grid-2">
+      <div class="card"><h4>Basic WMS</h4><p>Provides only a cartographic visualization of geodata. Operations: <strong>GetCapabilities</strong> + <strong>GetMap</strong>.</p></div>
+      <div class="card"><h4>Queryable WMS</h4><p>Also allows querying information about visualized features. Operations: GetCapabilities + GetMap + <strong>GetFeatureInfo</strong>.</p></div>
+    </div>
+    <p>A WMS follows a <strong>layer-based approach</strong>. Displayed geodata can be 2D or 3D, static or time-variant. <strong>Cascading WMS</strong> link other WMS and combine their layers with their own.</p>
+
+    <h4>WMS Operations</h4>
+    <div class="op-row"><div class="op-name teal">GetCapabilities</div><div class="op-desc"><strong>Mandatory.</strong> Returns XML service metadata: name/provider/abstract/keywords/fees, supported operations and formats, offered layers (with hierarchy, styles, CRS, bounding box, scale range, transparency, queryable flag).</div></div>
+    <div class="op-row"><div class="op-name teal">GetMap</div><div class="op-desc"><strong>Mandatory.</strong> Returns a map image (e.g. PNG). Request parameters: SERVICE, VERSION, REQUEST, LAYERS, STYLES, CRS, BBOX, WIDTH, HEIGHT, FORMAT, TRANSPARENT. Key: no strict order of KVPs required.</div></div>
+    <div class="op-row"><div class="op-name teal">GetFeatureInfo</div><div class="op-desc"><strong>Optional</strong> (queryable WMS only). Queries information about features at a specific pixel location in the map. Response is not well-defined — can be HTML, plain text, or XML.</div></div>
+
+    <h4>WMS Coordinate Systems</h4>
+    <div class="grid-2">
+      <div class="card">
+        <h4>Map CS (Pixel Space)</h4>
+        <ul>
+          <li>Integer positive pixel coordinates</li>
+          <li>Origin (0,0) at upper-left corner</li>
+          <li>i = horizontal axis (west→east), j = vertical axis (north→south)</li>
+          <li>WIDTH/HEIGHT define map size in pixels</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Layer CRS (Geographic Space)</h4>
+        <ul>
+          <li>WMS must support at least one CRS</li>
+          <li>For interoperability: should always support WGS84 geographic coordinates</li>
+          <li>Layers from different WMS can only be overlaid if they share a common CRS</li>
+          <li>CRS codes: <strong>EPSG</strong> (e.g. EPSG:4326 = WGS84 lat/lon), <strong>CRS:84</strong> (WGS84 lon/lat), <strong>AUTO2</strong> (custom)</li>
+          <li>WMS transforms from Layer CRS to Map CS</li>
+        </ul>
+      </div>
+    </div>
+    <div class="alert alert-orange"><strong>EPSG:4326 vs CRS:84 trap!</strong> EPSG:4326 = WGS84 with axis order <em>latitude, longitude</em> (y,x). CRS:84 = WGS84 with axis order <em>longitude, latitude</em> (x,y). This axis swap causes common interoperability bugs in WMS 1.3.0!</div>
+
+    <h4>WMS Graphic Formats</h4>
+    <ul>
+      <li><strong>Raster</strong>: GIF, PNG, JPEG, TIFF — for street networks, use <strong>PNG</strong> (supports transparency)</li>
+      <li><strong>Vector</strong>: SVG, WebCGM</li>
+      <li>A WMS <em>must</em> support at least one format with transparency that requires no browser plug-ins → mostly <strong>PNG</strong></li>
+      <li><strong>TRANSPARENT=TRUE</strong> is crucial for overlaying distributed WMS layers!</li>
+    </ul>
+
+    <h4>WMS Profiles</h4>
+    <p><strong>GDI-DE Profile (WMS-DE_1.0)</strong>: Specifies required CRS (EPSG:25832, EPSG:4258, etc.), language support, mandatory operations, layer naming conventions, legend URL, GetFeatureInfo response format.</p>
+    <p><strong>INSPIRE View Service Profile</strong>: Implements INSPIRE Implementing Rule (EC Regulation 976/2009).</p>
+    <div class="alert alert-blue"><strong>INSPIRE Implementing Rule vs. Technical Guidance (reminder):</strong> Implementing Rule = legally binding, defines WHAT, technology-independent, long-living. Technical Guidance = informative only, defines HOW, specifies technology, can be updated as technology changes. INSPIRE Technical Guidance for View Services defines two profiles: (1) ISO 19128 (WMS 1.3.0) and (2) Web Map Tile Service 1.0.0.</div>
+    <p><strong>INSPIRE View Service QoS (legally binding!):</strong></p>
+    <ul>
+      <li><strong>Performance</strong>: For a 470 KB image (800×600 px, 8-bit), initial response ≤ 5 seconds (at 90% of time = "normal situations")</li>
+      <li><strong>Capacity</strong>: 20 parallel queries per second</li>
+      <li><strong>Availability</strong>: 99% of time (= max. ~4 days per year downtime)</li>
+    </ul>
+
+    <h3>Web Map Tile Service (WMTS)</h3>
+    <p>Instead of generating map images on-the-fly, WMTS pre-generates and caches <strong>tiles</strong> at fixed scales. This significantly improves performance for standard zoom levels but is less flexible for arbitrary areas/scales.</p>
+    <p>Use cases: background maps, web mapping (e.g., OpenStreetMap tile servers), mobile maps. OGC API – Tiles is the modern ROA replacement.</p>
+
+    <h3>Styled Layer Descriptor (SLD)</h3>
+    <p>An extension to WMS that allows clients to define their own styling rules for layers. SLD uses <strong>Symbology Encoding (SE)</strong> to specify point symbols, line styles, polygon fills, text labels, etc. in XML.</p>
+
+    <h3>OGC API – Maps, Tiles &amp; Styles (New ROA Standards)</h3>
+    <table class="compare-table">
+      <tr><th>Standard</th><th>Publication</th><th>Purpose</th><th>SOA Equivalent</th></tr>
+      <tr><td><strong>OGC API – Maps</strong></td><td>9 Aug 2024</td><td>Discovery and query for access to electronic maps via simple URL parameters (width, height, bbox, crs, style, time)</td><td>WMS</td></tr>
+      <tr><td><strong>OGC API – Tiles</strong></td><td>10 Nov 2022</td><td>Provides tiles of vector features, coverages, maps or imagery</td><td>WMTS</td></tr>
+      <tr><td><strong>OGC API – Styles</strong></td><td>Draft (2021)</td><td>API to access/create/update a style repository; supports SLD 1.0/1.1 and Mapbox Style Spec</td><td>SLD/SE</td></tr>
+    </table>
+
+  </div>
+</div>
+
+<!-- ===== 5.3 GEODATA ENCODINGS ===== -->
+<div class="chapter" id="access">
+  <div class="ch-header" style="background:linear-gradient(90deg,#4c1d95,#6d28d9)">
+    <h2>5.3 Access to Geodata — Encodings</h2>
+    <p>GML · GeoJSON · GeoPackage · Format Comparison</p>
+  </div>
+  <div class="ch-body">
+
+    <h3>Requirements for Access Services (INSPIRE Download Services)</h3>
+    <ul>
+      <li>Access to raster and vector data in an <strong>open encoding</strong></li>
+      <li>Support for spatial and thematic selection (filtering)</li>
+      <li>Possibly also writing new features (transactions)</li>
+      <li>Access via internet; easy combination of distributed access services</li>
+    </ul>
+
+    <h3>ESRI Shapefile (Legacy)</h3>
+    <p>Well-established legacy format, but disadvantages for interoperability:</p>
+    <ul>
+      <li>Not an open standard; consists of multiple files (.shp, .dbf, .shx, ...)</li>
+      <li>Attribute names max. 10 characters; strings max. 255 characters</li>
+      <li>Max. size 2 GB; no Unicode support</li>
+    </ul>
+
+    <h3>GML — Geography Markup Language</h3>
+    <div class="def"><strong>GML:</strong> An XML dialect for encoding and transferring geodata. Provides both a machine-readable exchange format AND a mechanism for developing specific geodata schemata (application schemas) to support semantic interoperability.</div>
+    <h4>GML Version History</h4>
+    <ul>
+      <li><strong>GML 1.0 (~2000)</strong>: Simple Feature Model only (vector geometries; no complex geometry/topology)</li>
+      <li><strong>GML 2.0/2.1 (~2002)</strong>: Extension for thematic attributes; XML Schema for data model; GML instance = XML file containing only geodata</li>
+      <li><strong>GML 3.0/3.2.1/3.3 (~2005–2010)</strong>: Full adoption of ISO 191xx standards; GML 3.2.1 = ISO 19136; added topology, time, observations, coverages, 3D features; rules for application schemas</li>
+    </ul>
+    <h4>Feature Model (ISO 19101)</h4>
+    <p>A <strong>feature</strong> is a digital representation of a real-world object. A <strong>feature type</strong> is the class definition. A <strong>feature collection</strong> groups multiple features.</p>
+    <ul>
+      <li><strong>GML Profile</strong>: Subset of GML for specific use cases (reduces complexity)</li>
+      <li><strong>GML Application Schema</strong>: Domain-specific extension of GML for specific data types (e.g., road network, buildings, land use). Described in XML Schema (XSD), often modeled in UML first (ISO 19109).</li>
+    </ul>
+    <div class="code-block">&lt;gml:Point gml:id="p21" srsName="urn:ogc:def:crs:EPSG:6.6:4326"&gt;
+  &lt;gml:pos dimension="2"&gt;45.67 88.56&lt;/gml:pos&gt;
+&lt;/gml:Point&gt;</div>
+    <p><strong>Strengths</strong>: Highly flexible, extensible, supports complex modeling (topology, time, 3D). <strong>Weaknesses</strong>: Verbose files, slow to read/write, complex schemas.</p>
+
+    <h3>GeoJSON</h3>
+    <p>An IETF standard (RFC 7946, 2016) for encoding geographic data structures using JSON. Lightweight, readable, easy for web, compatible with many applications. Coordinate order in GeoJSON is always <strong>longitude, latitude</strong> (x,y) in WGS84.</p>
+    <div class="code-block">{
+  "type": "Feature",
+  "geometry": { "type": "Point", "coordinates": [-74.006, 40.714] },
+  "properties": { "name": "New York City" }
+}</div>
+    <p><strong>Strengths</strong>: Readable, easy for web/APIs, compatible with JS/Leaflet/Mapbox. <strong>Weaknesses</strong>: Can get large for complex data, limited field types, no topology support.</p>
+
+    <h3>GeoPackage</h3>
+    <div class="def"><strong>GeoPackage:</strong> OGC standard (version 1.4). A single SQLite database file containing both vector features AND raster data, plus metadata. Open, modern alternative to Shapefile.</div>
+    <p><strong>Advantages</strong>: Up to 140 TB storage, single file, stores metadata for all layers, compressed (smaller than Shapefile), R-tree spatial indexing for fast queries, supports SQL queries, stores multiple geometry types in one file.</p>
+    <p><strong>Disadvantages</strong>: Not all older GIS support it; SQLite complexity; not optimized for concurrent multi-user editing (file-based, not server-based).</p>
+
+    <h3>Format Comparison Summary</h3>
+    <table class="compare-table">
+      <tr><th>Format</th><th>Structure</th><th>Strengths</th><th>Weaknesses</th><th>Typical Use</th></tr>
+      <tr><td><strong>Shapefile</strong></td><td>Multiple files</td><td>Very compatible, simple</td><td>10-char field names, no Unicode, 2GB limit, multi-file</td><td>Legacy, data exchange</td></tr>
+      <tr><td><strong>GML</strong></td><td>Text-based XML</td><td>Highly flexible, extensible, complex modeling</td><td>Verbose, slow to parse, complex schemas</td><td>Interoperability, web services (WFS)</td></tr>
+      <tr><td><strong>GeoJSON</strong></td><td>JSON text file</td><td>Readable, easy for web, wide app compatibility</td><td>Large files for complex data, limited field types</td><td>Online maps, APIs, web publishing</td></tr>
+      <tr><td><strong>GeoPackage</strong></td><td>SQLite DB file</td><td>Vector+raster+metadata, large datasets, SQL queries</td><td>Newer, DB tools needed, single-user</td><td>Complex GIS datasets, INSPIRE alternative</td></tr>
+    </table>
+
+  </div>
+</div>
+
+<!-- ===== 5.4 WFS ===== -->
+<div class="chapter" id="wfs">
+  <div class="ch-header" style="background:linear-gradient(90deg,#7c2d12,#c2410c)">
+    <h2>5.4 Access to Feature-based Geodata — WFS &amp; OGC API Features</h2>
+    <p>Web Feature Service · Filter Encoding · OGC API Features (WFS 3.0)</p>
+  </div>
+  <div class="ch-body">
+
+    <h3>Web Feature Service (WFS)</h3>
+    <div class="def"><strong>WFS:</strong> First version ~2001. Current: WFS 2.0 (2009/10) = ISO 19142. Unlike WMS (returns images), WFS returns raw <strong>vector data (GML)</strong>. Stateless service using HTTP GET / POST / SOAP. Allows interoperable read/write access to distributed geodatabases.</div>
+
+    <h4>Four Types of WFS</h4>
+    <div class="grid-2">
+      <div class="card"><h4>Simple WFS</h4><p>Read-only access using <strong>pre-defined queries</strong>. Operations: GetCapabilities + DescribeFeatureType + GetFeature.</p></div>
+      <div class="card"><h4>Basic WFS</h4><p>Read-only with <strong>user-defined (ad hoc) queries</strong>. All Simple WFS ops + <strong>GetPropertyValue</strong>.</p></div>
+      <div class="card"><h4>Transactional WFS (WFS-T)</h4><p>Reading <em>and writing</em> geodata (insert/update/delete). Basic WFS + <strong>Transaction operation</strong>.</p></div>
+      <div class="card"><h4>Locking WFS</h4><p>Supports locking features during transactions (simulates session on stateless protocol). WFS-T + <strong>LockFeature operation</strong>.</p></div>
+    </div>
+
+    <h4>WFS Operations</h4>
+    <div class="op-row"><div class="op-name orange">GetCapabilities</div><div class="op-desc"><strong>Always mandatory.</strong> Returns: WFS instance name/provider/abstract, supported operations, offered feature types (names, bounding box, CRS).</div></div>
+    <div class="op-row"><div class="op-name orange">DescribeFeatureType</div><div class="op-desc"><strong>Always mandatory.</strong> Returns GML Application Schema: which properties/attributes, data types, geometry types, relationships, CRS of the offered feature types. Needed before writing ad hoc queries.</div></div>
+    <div class="op-row"><div class="op-name orange">GetFeature</div><div class="op-desc"><strong>Always mandatory.</strong> Returns a GML document with all features fulfilling the query. Queries can be ad hoc or stored. Uses <strong>Filter Encoding</strong> to formulate queries.</div></div>
+    <div class="op-row"><div class="op-name orange">GetPropertyValue</div><div class="op-desc"><strong>Basic WFS and above.</strong> Returns the attribute values (not full features) fulfilling a query. Returns as key-value pairs.</div></div>
+    <div class="op-row"><div class="op-name orange">Transaction</div><div class="op-desc"><strong>Transactional WFS.</strong> Supports insert, update, delete of features. New/updated features sent as GML objects. Can include LockID. Response confirms success/failure.</div></div>
+    <div class="op-row"><div class="op-name orange">LockFeature</div><div class="op-desc"><strong>Locking WFS.</strong> Locks specific features so no other client can modify them. Releases lock after successful transaction. Workaround for enabling transactions over stateless protocol. Returns LockID.</div></div>
+
+    <h4>Filter Encoding Standard (FES)</h4>
+    <div class="def"><strong>Filter Encoding:</strong> OGC standard (current: FES 2.0 / ISO 19143) for formulating queries on geo-objects as XML. Independent of specific query language, DBMS, or application. Supports both <strong>thematic queries</strong> (attribute conditions) and <strong>spatial queries</strong> (geometry relationships like Contains, Intersects, etc.).</div>
+    <p>Example: Find all lakes contained within Algonquin Park → uses both spatial filter (Contains) and thematic filter (FeatureType = Lake).</p>
+
+    <h4>WFS Conclusions</h4>
+    <ul>
+      <li>WFS allow interoperable access to distributed geodatabases <em>in principle</em></li>
+      <li>Too many heterogeneous application schemata hamper interoperability in practice</li>
+      <li>Transactional WFS are rare (need careful security and data curation)</li>
+      <li>There are fewer WFS than WMS (because WFS gives full data access)</li>
+      <li>Performance issues with large datasets — is web-based transfer of big geodatasets sensible?</li>
+    </ul>
+
+    <h3>INSPIRE Download Service (WFS Profile)</h3>
+    <p>INSPIRE distinguishes two types: (1) <strong>Dataset Download</strong> — pre-defined dataset retrieval, (2) <strong>Direct Access Download</strong> — supports user-defined queries. Technical Guidance defines three profiles: Atom-feed (pre-defined), WFS (pre-defined), WFS + Filter Encoding (direct access).</p>
+    <p><strong>QoS requirements</strong>: Capacity = 10 parallel requests/second (vs. 20 for WMS); Availability = 99%; Performance: GetMetadata = 10s; GetDataSet = 30s initial + sustained 0.5 MB/s or 500 objects/s.</p>
+
+    <h3>OGC API – Features (WFS 3.0)</h3>
+    <p>The modern ROA/OpenAPI successor to WFS 2.0. Part 1: Core (2022), Part 2: CRS by Reference, Part 3: Filtering (2024) using <strong>CQL2</strong> (Common Query Language 2.0).</p>
+    <p>URL pattern: <code>{root}/collections/{collectionId}/items</code>. Returns GeoJSON by default. Can also return GML. Direct browser access possible — human-readable.</p>
+    <p><strong>Key advantages over WFS 2.0</strong>: OpenAPI-based = self-documenting, discoverable; GeoJSON default = easier web integration; no complex SOAP/XML needed; general-purpose web search engines can index it; simpler for non-GIS developers.</p>
+
+  </div>
+</div>
+
+<!-- ===== 5.5 WCS ===== -->
+<div class="chapter" id="wcs">
+  <div class="ch-header" style="background:linear-gradient(90deg,#7f1d1d,#b91c1c)">
+    <h2>5.5 Access to Coverage/Raster Geodata — WCS &amp; OGC API Coverages</h2>
+    <p>Coverage Model · Web Coverage Service · OGC API Coverages</p>
+  </div>
+  <div class="ch-body">
+
+    <h3>Coverage Model (ISO 19123)</h3>
+    <div class="def"><strong>Coverage:</strong> Supports mapping from a spatiotemporal domain to attribute values where attribute types are common to all geographic positions within the spatiotemporal domain. This is the <strong>field view</strong> of geographic data.</div>
+    <div class="grid-2">
+      <div class="card"><h4>Discrete Coverage</h4><p>Returns the <em>same</em> attribute value for every direct position within a single spatial object (finite domain). Example: classified land use raster — all pixels in one class have the same value.</p></div>
+      <div class="card"><h4>Continuous Coverage</h4><p>Returns <em>different</em> values at different positions — can be subdivided infinitely. Example: digital elevation model, temperature field. WCS focuses on discrete coverages (continuous not further specified).</p></div>
+    </div>
+    <p>A <strong>Rectified Grid</strong> is a grid for which there is an affine transformation between grid coordinates and coordinates of an external CRS (standard raster/image). Grid points represent the <em>center</em> of sample spaces (pixels). Interpolation functions (nearest neighbor, bilinear, etc.) handle value estimation between grid points.</p>
+
+    <h3>Web Coverage Service (WCS)</h3>
+    <div class="def"><strong>WCS:</strong> First version ~2002. Current: WCS 2.0 (OGC 09-110r4, 2010) / WCS 2.1 (2018). Stateless service. Focuses on interoperable access to <strong>raster/coverage data</strong> (2D, 3D, time-variant, multi-band). Complements WFS (which focuses on vector features).</div>
+
+    <h4>WCS Operations</h4>
+    <div class="op-row"><div class="op-name" style="background:#b91c1c">GetCapabilities</div><div class="op-desc"><strong>Mandatory.</strong> Returns: WCS instance metadata, offered operations, offered coverages (abstract, CRS, formats).</div></div>
+    <div class="op-row"><div class="op-name" style="background:#b91c1c">DescribeCoverage</div><div class="op-desc"><strong>Mandatory.</strong> Returns detailed metadata for specific coverage(s): attributes, data types and domains, supported CRS, spatial/temporal extent, resolution, supported interpolation methods.</div></div>
+    <div class="op-row"><div class="op-name" style="background:#b91c1c">GetCoverage</div><div class="op-desc"><strong>Mandatory.</strong> Request parameters: CRS, spatial/temporal subset (Trimming = subset of coverage; Slicing = a dimension cut, e.g. 2D slice from 3D dataset), spatial resolution (resampling), which bands/layers, output format. Returns a coverage file (TIFF, NetCDF, HDF, ...) or a download URL.</div></div>
+
+    <h4>GetCoverage Subset Types</h4>
+    <div class="grid-2">
+      <div class="card"><h4>Trimming</h4><p>Subset along an axis to produce a coverage of the same dimensionality. E.g., spatial bounding box subset of a 2D raster = still a 2D raster.</p></div>
+      <div class="card"><h4>Slicing</h4><p>Subset that reduces dimensionality by one. E.g., select one time slice from a 3D (space × time) dataset = get a 2D spatial raster.</p></div>
+    </div>
+
+    <h4>WCS Conclusion</h4>
+    <ul>
+      <li>Distributed WCS allow interoperable access to coverages — mainly remote sensing and climate data</li>
+      <li>Fewer WCS implementations than WMS</li>
+      <li>Performance issues for large rasters — smart aggregation, generalization, and filtering needed to reduce data transfer</li>
+    </ul>
+
+    <h3>OGC API – Coverages</h3>
+    <p>Website: <a href="https://ogcapi.ogc.org/coverages/">ogcapi.ogc.org/coverages/</a>. Part 1: Core available as Draft 0.0.7. Part 2: Filtering — planned. Returns data encoded in <strong>CoverageJSON</strong> (OGC Community Standard, Aug 2023). Example at TU Dresden Klimakonform project: daily temperature data accessible via simple URL with bbox, datetime, and CRS parameters.</p>
+
+    <h3>WMS vs. WFS vs. WCS Comparison</h3>
+    <table class="compare-table">
+      <tr><th></th><th>WMS</th><th>WFS</th><th>WCS</th></tr>
+      <tr><td>Returns</td><td>Rendered map image (PNG, JPEG, SVG)</td><td>Raw vector data (GML, GeoJSON)</td><td>Raw raster/coverage data (TIFF, NetCDF, HDF)</td></tr>
+      <tr><td>Data type</td><td>Any (raster or vector, rendered)</td><td>Vector features</td><td>Raster/coverage (gridded data)</td></tr>
+      <tr><td>Client can edit</td><td>❌</td><td>✅ (Transactional WFS)</td><td>❌</td></tr>
+      <tr><td>Filtering</td><td>Layers/styles only</td><td>Full Filter Encoding (spatial + thematic)</td><td>Spatial/temporal/band subsetting</td></tr>
+      <tr><td>Key use case</td><td>Visualization in browser/map client</td><td>Access to feature-based geodata</td><td>Access to remote sensing, climate data</td></tr>
+      <tr><td>First version</td><td>~2000</td><td>~2001</td><td>~2002</td></tr>
+      <tr><td>Abundance</td><td>Most common</td><td>Less common than WMS</td><td>Least common</td></tr>
+    </table>
+
+  </div>
+</div>
+
+<!-- ===== 5.6 AAA ===== -->
+<div class="chapter" id="aaa">
+  <div class="ch-header" style="background:linear-gradient(90deg,#14532d,#15803d)">
+    <h2>5.6 AAA — Authoritative German Geoinformation</h2>
+    <p>AFIS · ALKIS · ATKIS · GeoInfoDok · NAS Interface</p>
+  </div>
+  <div class="ch-body">
+
+    <h3>The AAA System</h3>
+    <div class="def"><strong>AAA Model:</strong> Amtliches Festpunktinformationssystem / Amtliches Liegenschaftskatasterinformationssystem / Amtliches Topographisch-Kartographisches Informationssystem. Developed by AdV (Arbeitsgemeinschaft der Vermessungsverwaltungen der Bundesländer). Based on ISO 19xxx standards and OGC specifications.</div>
+    <div class="grid-3">
+      <div class="card"><h4>🔵 AFIS</h4><p><strong>Amtliches Festpunktinformationssystem</strong> — Authoritative Reference Point Information System. Geodetic control points.</p></div>
+      <div class="card"><h4>🟡 ALKIS</h4><p><strong>Amtliches Liegenschaftskatasterinformationssystem</strong> — Authoritative Real Estate Cadastre Information System. Property/parcel data (replaces ALB + ALK).</p></div>
+      <div class="card"><h4>🟢 ATKIS</h4><p><strong>Amtliches Topographisch-Kartographisches Informationssystem</strong> — Authoritative Topographic-Cartographic Information System. Topographic/landscape data (replaces old ATKIS).</p></div>
+    </div>
+    <p>AAA has been (almost) fully implemented in all German federal states since ~2015. The model is documented in <strong>GeoInfoDok</strong> (Dokumentation zur Modellierung der Geoinformationen des amtlichen Vermessungswesens).</p>
+
+    <h3>Historical Development</h3>
+    <p>Before AAA (~1995): separate, technology-specific systems (ALB, ALK, old ATKIS) using AdV-specific technical foundations. With AAA (~2015): unified model based on ISO 19100 standards, OGC specs, and W3C recommendations — fully interoperable via WFS/GML.</p>
+
+    <h3>NAS — Normbasierte Austauschschnittstelle</h3>
+    <p>The <strong>NAS</strong> (standards-based exchange interface) is the interface for communication between different vendor-specific AAA software systems. Key requirements (~2002):</p>
+    <ul>
+      <li>Common description of objects, operations, and information products</li>
+      <li>Automatic derivation of schemata from UML models</li>
+      <li>XML-based, using market standards (ISO 19xxx, OGC WFS/GML)</li>
+    </ul>
+
+    <h3>AAA Architecture</h3>
+    <p>The AAA model is structured in layers: <strong>ISO 19100 Series</strong> (foundation) → <strong>AFIS-ALKIS-ATKIS-Profiles</strong> → <strong>AFIS-ALKIS-ATKIS-Specifications</strong> → <strong>AAA Application Schema + Metadata + Registries</strong> → Operations (WFS interface) → Presentation (symbols, rules).</p>
+    <p><strong>AAA Operations</strong>: Locking, Unlocking, Updating, Inserting, Using. Used by: (1) Authorities/surveying agencies for data acquisition and maintenance, (2) Secondary databases, (3) External users (energy providers, etc.) for read access.</p>
+
+    <h3>URNs in AAA</h3>
+    <p>AAA uses URNs (Uniform Resource Names) to uniquely identify CRS, units of measurement (UoM), and object IDs:</p>
+    <div class="code-block">&lt;gml:Point srsName="urn:adv:crs:DE_DHDN_3GK3"&gt;
+  &lt;gml:pos&gt;3534880.00 5395220.00&lt;/gml:pos&gt;
+&lt;/gml:Point&gt;
+
+&lt;amtlicheFlaeche uom="urn:adv:uom:m2"&gt;626&lt;/amtlicheFlaeche&gt;
+&lt;istGebucht xlink:href="urn:adv:oid:DEHE123400229002"/&gt;</div>
+
+    <h3>AAA Products</h3>
+    <p>Products and presentations are processed base data sets, ideally created "on-the-fly" and "on demand". Some products are stored separately (require additional symbol/styling rule sets). Products can be ATKIS DLM topographic data, cadastral maps, DGMs, etc.</p>
+
+    <h3>AAA — INSPIRE Relationship</h3>
+    <p>Study (Reinwarth 2010): ALKIS cadastral parcels CAN be transformed into INSPIRE Cadastral Parcels using FME (Feature Manipulation Engine). This is still "an easy case" — the AAA → INSPIRE transformation is generally complex and ongoing research topic.</p>
+    <div class="alert alert-green"><strong>Current development:</strong> GeoInfoDok version 7 (in progress) will update the AAA model to also include 3D city models and align with INSPIRE Metadata Rules.</div>
+
+  </div>
+</div>
+
+<!-- ===== 5.7 INSPIRE DATA SPECS ===== -->
+<div class="chapter" id="inspire">
+  <div class="ch-header" style="background:linear-gradient(90deg,#312e81,#3730a3)">
+    <h2>5.7 INSPIRE Harmonized Data Specifications</h2>
+    <p>Development Process · Implementing Rules · Application Schemas</p>
+  </div>
+  <div class="ch-body">
+
+    <h3>Development Approach</h3>
+    <p>Drafting INSPIRE Implementing Rules for harmonized geodata specs followed two steps:</p>
+    <ol>
+      <li><strong>Develop a conceptual model and methodology</strong> for the specifications — based on ISO 19100 Standards</li>
+      <li><strong>Develop the data schemata</strong> for each Annex topic — done in Thematic Working Groups (TWGs)</li>
+    </ol>
+    <p>Specs follow a hierarchy: <em>Framework for harmonized data specification</em> (DT DS — common elements all topics share) → <em>Thematic Data Specifications</em> (per TWG, per Annex topic).</p>
+    <ul>
+      <li>Implementing Rules for Annex I &amp; II: updated version 2014</li>
+      <li>Implementing Rules for Annex III: first version 2013</li>
+    </ul>
+
+    <h3>What INSPIRE Data Specifications Contain</h3>
+    <ul>
+      <li>Based on ISO 191xx standards</li>
+      <li>UML diagrams showing harmonized geodata models (object types/classes, geometry presentations, attributes, which are mandatory)</li>
+      <li>Identifiers, relationships, core attributes, temporal dimension, versioning</li>
+      <li>Reference to INSPIRE network services for delivery</li>
+    </ul>
+
+    <h3>Current Challenges and Research Questions</h3>
+    <ul>
+      <li>Are these specifications implementable and consistent?</li>
+      <li>Do we need less complex specifications?</li>
+      <li>How to transform/migrate existing databases into INSPIRE data (ad-hoc)? Who, when, which data?</li>
+      <li>Can INSPIRE data also be used in national applications — what is missing?</li>
+      <li>How to converge ALKIS/ATKIS and INSPIRE schemas?</li>
+    </ul>
+
+    <h3>Alternative Encodings in INSPIRE (Post-REFIT)</h3>
+    <p>Following the 2016 REFIT evaluation that stepped back from full harmonization requirements, INSPIRE now also accepts "Good Practices" for alternative encodings:</p>
+    <ul>
+      <li><strong>GeoJSON encoding of INSPIRE datasets</strong> — for simpler web-based access</li>
+      <li><strong>GeoPackage encoding of INSPIRE datasets</strong> — for more complex data including raster</li>
+    </ul>
+    <p>This makes INSPIRE data more accessible and reduces implementation burden compared to strict GML/WFS requirements.</p>
+
+    <h3>OGC API Standards Correspondence</h3>
+    <table class="compare-table">
+      <tr><th>Traditional OGC SOA Service</th><th>Modern OGC API (ROA)</th><th>Function</th></tr>
+      <tr><td>WMS</td><td>OGC API – Maps</td><td>Map visualization</td></tr>
+      <tr><td>WMTS</td><td>OGC API – Tiles</td><td>Tiled map access</td></tr>
+      <tr><td>WFS</td><td>OGC API – Features</td><td>Feature/vector data access</td></tr>
+      <tr><td>WCS</td><td>OGC API – Coverages</td><td>Raster/coverage access</td></tr>
+      <tr><td>WPS</td><td>OGC API – Processes</td><td>Geoprocessing</td></tr>
+      <tr><td>SLD/SE</td><td>OGC API – Styles</td><td>Styling</td></tr>
+      <tr><td>CSW / OGC API – Records</td><td>OGC API – Records</td><td>Metadata/discovery</td></tr>
+    </table>
+
+  </div>
+</div>
+
+</main>
+</body>
+</html>
