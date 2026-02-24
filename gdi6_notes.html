@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GDI — Chapter 6 Study Notes</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap');
+
+  :root {
+    --ink: #1a1a2e;
+    --ink-soft: #4a4a6a;
+    --page: #fafaf8;
+    --rule: #e8e8e4;
+
+    --c1: #0e7490;   /* next gen GDI — cyan */
+    --c1l: #cffafe;
+    --c2: #6d28d9;   /* geoprocessing — purple */
+    --c2l: #ede9fe;
+    --c3: #0f766e;   /* geosimulation — teal */
+    --c3l: #ccfbf1;
+    --c4: #b45309;   /* geo semantics — amber */
+    --c4l: #fef3c7;
+
+    --green: #15803d; --greenl: #dcfce7;
+    --red: #b91c1c;   --redl: #fee2e2;
+    --slate: #475569; --slatel: #f1f5f9;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--page);
+    color: var(--ink);
+    line-height: 1.72;
+    font-size: 15px;
+  }
+
+  .hero {
+    background: var(--ink);
+    color: #f0f0ea;
+    padding: 3.5rem 2rem 2.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent, transparent 40px,
+      rgba(255,255,255,.03) 40px, rgba(255,255,255,.03) 41px
+    );
+  }
+  .hero h1 { font-size: 2rem; font-weight: 700; letter-spacing: -.02em; position: relative; }
+  .hero .sub { font-size: .95rem; opacity: .65; margin-top: .4rem; position: relative; font-weight: 300; letter-spacing: .02em; }
+  .hero .chips { display: flex; flex-wrap: wrap; gap: .4rem; justify-content: center; margin-top: 1.2rem; position: relative; }
+  .hero .chip { padding: .2rem .75rem; border-radius: 3px; font-size: .75rem; font-weight: 600; letter-spacing: .04em; font-family: 'IBM Plex Mono', monospace; }
+
+  .toc-wrap { max-width: 1060px; margin: 2rem auto; padding: 0 1.5rem; }
+  .toc { background: white; border-radius: 8px; border: 1px solid var(--rule); padding: 1.5rem 1.75rem; }
+  .toc h2 { font-size: .7rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 1rem; font-family: 'IBM Plex Mono', monospace; }
+  .toc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: .5rem; }
+  .toc-item { display: flex; align-items: center; gap: .6rem; padding: .5rem .75rem; border-radius: 5px; text-decoration: none; font-size: .88rem; font-weight: 600; transition: opacity .15s; }
+  .toc-item:hover { opacity: .8; }
+  .toc-num { font-family: 'IBM Plex Mono', monospace; font-size: .72rem; opacity: .7; }
+
+  main { max-width: 1060px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+  .ch { margin-bottom: 3.5rem; }
+  .ch-label {
+    display: inline-flex; align-items: center; gap: .5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: .72rem; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: .25rem .7rem; border-radius: 3px;
+    margin-bottom: .75rem;
+  }
+  .ch h2 {
+    font-size: 1.6rem; font-weight: 700; letter-spacing: -.02em;
+    border-bottom: 2px solid var(--rule);
+    padding-bottom: .6rem; margin-bottom: 1.5rem;
+    line-height: 1.25;
+  }
+  h3 {
+    font-size: 1.1rem; font-weight: 700; margin: 2rem 0 .65rem;
+    padding-left: .9rem;
+    border-left-width: 3px; border-left-style: solid;
+  }
+  h4 { font-size: .97rem; font-weight: 700; margin: 1.3rem 0 .45rem; color: var(--ink-soft); }
+
+  p { margin-bottom: .75rem; }
+  ul, ol { margin: .5rem 0 .75rem 1.6rem; }
+  li { margin-bottom: .3rem; }
+
+  .def {
+    background: #f5f5f2; border-left: 3px solid var(--ink);
+    border-radius: 0 6px 6px 0;
+    padding: .85rem 1.1rem; margin: .85rem 0;
+    font-size: .92rem;
+  }
+  .def cite { font-style: italic; opacity: .7; font-size: .85rem; display: block; margin-top: .3rem; }
+
+  .box { border-radius: 7px; padding: .85rem 1.1rem; margin: .85rem 0; font-size: .91rem; }
+  .box-cyan   { background: var(--c1l); border-left: 3px solid var(--c1); }
+  .box-purple { background: var(--c2l); border-left: 3px solid var(--c2); }
+  .box-teal   { background: var(--c3l); border-left: 3px solid var(--c3); }
+  .box-amber  { background: var(--c4l); border-left: 3px solid var(--c4); }
+  .box-green  { background: var(--greenl); border-left: 3px solid var(--green); }
+  .box-red    { background: var(--redl); border-left: 3px solid var(--red); }
+  .box-slate  { background: var(--slatel); border-left: 3px solid var(--slate); }
+  .box strong { display: block; margin-bottom: .25rem; }
+
+  code { font-family: 'IBM Plex Mono', monospace; background: #f0f0ea; border-radius: 3px; padding: .1em .35em; font-size: .83rem; }
+  pre { background: var(--ink); color: #d4d4cc; border-radius: 8px; padding: 1.1rem 1.3rem; font-size: .8rem; font-family: 'IBM Plex Mono', monospace; margin: .85rem 0; overflow-x: auto; line-height: 1.6; white-space: pre; }
+
+  .tbl { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .87rem; }
+  .tbl th { background: var(--ink); color: white; padding: .55rem .85rem; text-align: left; font-weight: 600; font-size: .82rem; letter-spacing: .02em; }
+  .tbl td { padding: .5rem .85rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  .tbl tr:nth-child(even) td { background: #f5f5f2; }
+  .tbl tr:hover td { background: #eeeee8; }
+
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: .85rem 0; }
+  .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin: .85rem 0; }
+  .g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin: .85rem 0; }
+  .card { background: white; border: 1px solid var(--rule); border-radius: 7px; padding: 1rem 1.1rem; }
+  .card h4 { margin-top: 0; font-size: .9rem; }
+
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin: .85rem 0; }
+  .flow-step { background: white; border: 1px solid var(--rule); border-radius: 5px; padding: .35rem .75rem; font-size: .84rem; font-weight: 600; }
+  .flow-arrow { color: var(--ink-soft); font-weight: 600; }
+
+  .op { display: flex; align-items: flex-start; gap: .75rem; padding: .7rem .85rem; background: white; border: 1px solid var(--rule); border-radius: 6px; margin-bottom: .45rem; }
+  .op-tag { font-family: 'IBM Plex Mono', monospace; font-size: .76rem; font-weight: 600; white-space: nowrap; padding: .18rem .55rem; border-radius: 3px; }
+  .op-desc { font-size: .9rem; }
+
+  .levels { display: flex; flex-direction: column; gap: .35rem; margin: .85rem 0; }
+  .level-row { display: flex; align-items: flex-start; gap: .75rem; }
+  .level-badge { font-family: 'IBM Plex Mono', monospace; font-size: .72rem; font-weight: 600; background: var(--ink); color: white; padding: .15rem .55rem; border-radius: 3px; white-space: nowrap; min-width: 130px; text-align: center; flex-shrink: 0; margin-top: .1rem; }
+  .level-desc { font-size: .9rem; }
+
+  /* chapter accent colors */
+  .ch.c1 h3 { border-color: var(--c1); color: var(--c1); }
+  .ch.c2 h3 { border-color: var(--c2); color: var(--c2); }
+  .ch.c3 h3 { border-color: var(--c3); color: var(--c3); }
+  .ch.c4 h3 { border-color: var(--c4); color: var(--c4); }
+
+  /* two-column compare */
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; margin: .85rem 0; font-size: .9rem; }
+  .compare-col { padding: 1rem 1.1rem; }
+  .compare-col:first-child { border-right: 1px solid var(--rule); }
+  .compare-col h4 { margin: 0 0 .5rem; font-size: .88rem; }
+
+  @media (max-width: 700px) {
+    .g2, .g3, .g4, .compare { grid-template-columns: 1fr; }
+    .compare-col:first-child { border-right: none; border-bottom: 1px solid var(--rule); }
+    .hero h1 { font-size: 1.5rem; }
+    main, .toc-wrap { padding-left: 1rem; padding-right: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>GDI — Chapter 6</h1>
+  <p class="sub">Latest Developments and Research in the Context of GDI</p>
+  <div class="chips">
+    <span class="chip" style="background:#0e7490;color:white;">6.1 Next GDI Generation</span>
+    <span class="chip" style="background:#6d28d9;color:white;">6.2 Distributed Geoprocessing</span>
+    <span class="chip" style="background:#0f766e;color:white;">6.3 Geosimulation &amp; Sensor Web</span>
+    <span class="chip" style="background:#b45309;color:white;">6.4 Geo Semantics</span>
+  </div>
+</div>
+
+<div class="toc-wrap">
+  <div class="toc">
+    <h2>Contents</h2>
+    <div class="toc-grid">
+      <a class="toc-item" href="#s61" style="background:var(--c1l);color:var(--c1);">
+        <span class="toc-num">6.1</span>Next GDI Generation &amp; Scientific GDI
+      </a>
+      <a class="toc-item" href="#s62" style="background:var(--c2l);color:var(--c2);">
+        <span class="toc-num">6.2</span>Distributed Geoprocessing (WPS)
+      </a>
+      <a class="toc-item" href="#s63" style="background:var(--c3l);color:var(--c3);">
+        <span class="toc-num">6.3</span>Geosimulation &amp; Geo Sensor Web
+      </a>
+      <a class="toc-item" href="#s64" style="background:var(--c4l);color:var(--c4);">
+        <span class="toc-num">6.4</span>Geo Semantics &amp; Ontologies
+      </a>
+    </div>
+  </div>
+</div>
+
+<main>
+
+<!-- ════════════════════════════════════════
+     6.1  NEXT GDI GENERATION & SCIENTIFIC GDI
+     ════════════════════════════════════════ -->
+<div class="ch c1" id="s61">
+  <div class="ch-label" style="background:var(--c1l);color:var(--c1);">6.1 · GDI Research</div>
+  <h2>The Next GDI Generation &amp; Scientific GDI</h2>
+
+  <h3>GDI Species — The Evolving Landscape</h3>
+  <p>GDI today is not a single monolithic concept. The lecture identifies four coexisting GDI species, each with distinct drivers, stakeholders, and technical requirements:</p>
+  <div class="g4">
+    <div class="card"><h4>aGDI</h4><p><strong>Administrative GDI</strong>. Driven by governments, INSPIRE, GDI-DE. Formal, regulated, authoritative data (ALKIS, ATKIS).</p></div>
+    <div class="card"><h4>sGDI</h4><p><strong>Scientific GDI</strong>. Research communities sharing simulation data, models, observations. FAIR data, DOIs, reproducibility.</p></div>
+    <div class="card"><h4>cMS</h4><p><strong>Commercial Map Services</strong>. Google Maps, HERE, Esri. Driven by market, proprietary APIs, business models.</p></div>
+    <div class="card"><h4>vGI</h4><p><strong>Volunteered Geographic Information</strong>. OpenStreetMap, citizen science. Crowdsourced, bi-directional, open.</p></div>
+  </div>
+  <p>The "next generation GDI" vision sees these species converging alongside emerging domains: GEOSS (Global Earth Observation System of Systems), Digital Earth, GeoSensor Web, GeoSim Web, and Research Infrastructures — all integrated in an interoperable GDI 2.0/3.0/4.0.</p>
+
+  <h3>The Next GDI Generation — Vision</h3>
+  <p>Four key capabilities distinguish the next generation from today's GDI:</p>
+  <div class="levels">
+    <div class="level-row">
+      <span class="level-badge">Bi-directional</span>
+      <span class="level-desc">Transactions, crowdsourcing, VGI — not just data consumption but data contribution (chapters 3.1, 5.5)</span>
+    </div>
+    <div class="level-row">
+      <span class="level-badge">Ad-hoc Fusion</span>
+      <span class="level-desc">On-the-fly geodata fusion across heterogeneous sources without pre-arrangement (chapter 5.5)</span>
+    </div>
+    <div class="level-row">
+      <span class="level-badge">Shared Geoprocessing</span>
+      <span class="level-desc">Sharing processing capabilities for ad-hoc and reproducible analysis — WPS, moving code (chapter 6.1)</span>
+    </div>
+    <div class="level-row">
+      <span class="level-badge">Real-time + Simulation</span>
+      <span class="level-desc">Integration of near-real-time sensor observations and simulation results (chapter 6.2)</span>
+    </div>
+    <div class="level-row">
+      <span class="level-badge">Semantic Interop.</span>
+      <span class="level-desc">Machine-readable meaning, not just syntax — ontologies, thesauri, auto-discovery (chapters 5.7, 6.3)</span>
+    </div>
+  </div>
+
+  <h3>Scientific GDI (sGDI)</h3>
+  <p>Research communities increasingly build and use GDI for scientific purposes — sharing data, simulations, and analysis methods across disciplines. Examples: the IPCC Interactive Atlas (OGC-compliant WMS for climate visualization), GLUES GDI for global land management research, COLABIS air quality information systems.</p>
+  <p>Scientific GDI builds on the same OGC/ISO standards as administrative GDI — WMS, WFS, WCS — but has additional requirements that are not yet well addressed by existing standards.</p>
+
+  <h3>Challenges Specific to Scientific GDI</h3>
+  <table class="tbl">
+    <tr><th>Challenge</th><th>Why it matters</th><th>Status</th></tr>
+    <tr>
+      <td><strong>Time &amp; Scenarios in Metadata/WMS</strong></td>
+      <td>Scientific data is inherently time-variant (climate projections, simulation scenarios with future branch time). Standard metadata and WMS were designed for static, administrative data.</td>
+      <td>Technically possible to add time dimensions to WMS; rarely implemented in practice</td>
+    </tr>
+    <tr>
+      <td><strong>Lineage / Provenance</strong></td>
+      <td>Scientists need to trace how a dataset was derived — which model, which parameters, which source data — to assess usability and reproduce results. Linked to reproducible research.</td>
+      <td>ISO 19115 supports lineage only <em>unidirectionally</em>; bi-directional links (data → services that used it) are not defined</td>
+    </tr>
+    <tr>
+      <td><strong>Scenario / simulation metadata vocabulary</strong></td>
+      <td>No common structures, taxonomies, or vocabularies to describe simulation assumptions, temporal resolution, uncertainties, sensitivities</td>
+      <td>Open research problem; no standard yet</td>
+    </tr>
+    <tr>
+      <td><strong>UUIDs and DOIs</strong></td>
+      <td>Globally accepted persistent identifiers for metadata records, data, services, and software/applications are needed to enable reliable cross-linking and citation</td>
+      <td>DOIs are available via DataCite, PANGAEA; not yet systematically applied to all GI resources</td>
+    </tr>
+    <tr>
+      <td><strong>Automated metadata generation</strong></td>
+      <td>Current GIS applications do not automatically log full processing history; metadata creation remains mostly manual</td>
+      <td>Active research; COLABIS project worked on closing the "metadata gap"</td>
+    </tr>
+    <tr>
+      <td><strong>Privacy and data protection</strong></td>
+      <td>Health, social, and environmental data often contains sensitive personal information; automated compliance checking is needed to allow easier online access</td>
+      <td>Requires strict formalization of privacy rules; "intra muros" computation (aggregated results only)</td>
+    </tr>
+    <tr>
+      <td><strong>Incentives for data publication</strong></td>
+      <td>Scientists are rewarded for paper publications, not data publications. Requires acknowledging data &amp; software publications similar to journal articles (ISI citation index equivalent)</td>
+      <td>Emerging: DataCite, PANGAEA, ORCID; cultural change needed in academia</td>
+    </tr>
+  </table>
+  <div class="box box-cyan">
+    <strong>The core tension:</strong> Scientific data is dynamic, uncertain, scenario-based, and process-dependent. Existing GDI metadata standards (ISO 19115) were designed for static, authoritative administrative datasets. Adapting them to scientific workflows is an ongoing research challenge.
+  </div>
+
+  <h3>NFDI — National Research Data Infrastructure (Germany)</h3>
+  <p>The <strong>Nationale Forschungsdateninfrastruktur (NFDI)</strong> is a German federal initiative (2018 coalition agreement) to systematize scientific data holdings and ensure sustainable, FAIR access. Funded at 90 million €/year for 10+ years through the Bund-Länder programme; up to 30 domain-specific consortia.</p>
+  <p>Built on <strong>FAIR Principles</strong> (<code>go-fair.org</code>):</p>
+  <div class="g4">
+    <div class="card" style="text-align:center;"><h4 style="font-size:1.3rem;">F</h4><p style="font-size:.85rem;"><strong>Findable</strong> — persistent identifiers, rich metadata, indexed in searchable resources</p></div>
+    <div class="card" style="text-align:center;"><h4 style="font-size:1.3rem;">A</h4><p style="font-size:.85rem;"><strong>Accessible</strong> — retrievable by identifier, open standardized protocol, metadata accessible even when data is not</p></div>
+    <div class="card" style="text-align:center;"><h4 style="font-size:1.3rem;">I</h4><p style="font-size:.85rem;"><strong>Interoperable</strong> — formal shared knowledge representation, FAIR vocabularies, qualified references to other data</p></div>
+    <div class="card" style="text-align:center;"><h4 style="font-size:1.3rem;">R</h4><p style="font-size:.85rem;"><strong>Reusable</strong> — clear usage licenses, provenance, domain-relevant community standards</p></div>
+  </div>
+
+  <h3>NFDI4Earth</h3>
+  <p>The Earth System Sciences consortium within NFDI (<code>nfdi4earth.de</code>). Covers: geosphere, atmosphere, biosphere, hydrosphere, cryosphere, and anthroposphere. Addresses topics from local processes to global challenges — climate change, land-use change, natural hazards, water scarcity.</p>
+  <p><strong>Problems NFDI4Earth addresses:</strong></p>
+  <ul>
+    <li>Over 100 data services related to Earth System Sciences, but only few are suitable/interoperable</li>
+    <li>Highly diverse data qualities: different dimensions, semantics, scales, temporal/spatial resolutions, provenance</li>
+    <li>Different data cultures across sub-disciplines; uneven RDM expertise</li>
+    <li>Incomplete support along the full data lifecycle</li>
+    <li>Lack of platforms and tools for joint interpretation of heterogeneous, decentralized data</li>
+  </ul>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     6.2  DISTRIBUTED GEOPROCESSING
+     ════════════════════════════════════════ -->
+<div class="ch c2" id="s62">
+  <div class="ch-label" style="background:var(--c2l);color:var(--c2);">6.2 · Distributed Geoprocessing</div>
+  <h2>Distributed Geoprocessing — WPS &amp; Beyond</h2>
+
+  <h3>Why Distributed Geoprocessing?</h3>
+  <p>GDI as described in Chapters 4–5 provides distributed <em>data</em> (WFS, WCS) and <em>visualization</em> (WMS). But many real-world tasks require not just accessing data but also <em>processing</em> it — interpolations, aggregations, spatial joins, classification, routing. The next generation GDI needs to share processing capabilities as interoperably as it shares data.</p>
+  <p>Three escalating levels of sharing geoprocessing:</p>
+  <div class="levels">
+    <div class="level-row">
+      <span class="level-badge">Level 1 — Tools</span>
+      <span class="level-desc">Sharing desktop GIS tools (ArcGIS, QGIS, GRASS). Algorithms stay proprietary; no interoperability. Established, but silo-based.</span>
+    </div>
+    <div class="level-row">
+      <span class="level-badge">Level 2 — Functions</span>
+      <span class="level-desc">Sharing geoprocessing <em>functions</em> as web services (WPS). Interoperable offering and use of individual geoprocessing operations. Current state of practice.</span>
+    </div>
+    <div class="level-row">
+      <span class="level-badge">Level 3 — Logic</span>
+      <span class="level-desc">Sharing geoprocessing <em>algorithms / logic</em> in a formalized, re-deployable way across platforms. Requires agreed formalisms and exchange mechanisms. Currently a research goal.</span>
+    </div>
+  </div>
+
+  <h3>Web Processing Service (WPS)</h3>
+  <div class="def">
+    <strong>OGC WPS 2.0.0 (2014, OGC 14-065)</strong> defines a generic interface for offering <em>any</em> geoprocessing function as a web service. It is technology-neutral — any function (buffer, interpolation, routing, classification) can be wrapped and offered through the same standard interface. WPS is stateless and supports both synchronous and asynchronous execution.
+  </div>
+
+  <h4>WPS Core Concepts</h4>
+  <div class="g3">
+    <div class="card">
+      <h4>Process</h4>
+      <p>A computational function with a unique URI identifier. Has defined <strong>Inputs</strong> (0 or more, each with min/maxOccurs) and <strong>Outputs</strong> (1 or more). Data types: <code>literal</code>, <code>bbox</code>, <code>complex</code> (extendable for any format).</p>
+    </div>
+    <div class="card">
+      <h4>Job</h4>
+      <p>A single execution of a process. Has a lifecycle: created → running → succeeded/failed. Each job has a unique JobID. Clients can monitor job status asynchronously via GetStatus.</p>
+    </div>
+    <div class="card">
+      <h4>Data Types</h4>
+      <p><strong>Literal:</strong> simple values (numbers, strings). <strong>BoundingBox:</strong> spatial extent. <strong>Complex:</strong> any structured format — GML, GeoJSON, raster formats, NetCDF. Complex type is extendable to accommodate new formats.</p>
+    </div>
+  </div>
+
+  <h4>WPS Operations Sequence</h4>
+  <div class="op">
+    <span class="op-tag" style="background:var(--c2l);color:var(--c2);">GetCapabilities</span>
+    <div class="op-desc">Returns service metadata — which processes are offered, what protocols are supported, version information.</div>
+  </div>
+  <div class="op">
+    <span class="op-tag" style="background:var(--c2l);color:var(--c2);">DescribeProcess</span>
+    <div class="op-desc">Returns the full description of a specific process: its inputs (identifiers, data types, cardinality), outputs (identifiers, data types), and free-text description. The client must call this before Execute to know what to send.</div>
+  </div>
+  <div class="op">
+    <span class="op-tag" style="background:var(--c2l);color:var(--c2);">Execute</span>
+    <div class="op-desc">Submits a process for execution with the specified input data. Can be synchronous (server blocks and returns result) or asynchronous (server returns a JobID; client polls with GetStatus/GetResult). Data can be sent by value (inline) or by reference (URL).</div>
+  </div>
+
+  <h4>Synchronous vs. Asynchronous Execution</h4>
+  <div class="compare">
+    <div class="compare-col">
+      <h4>Synchronous (a)</h4>
+      <p>Client sends Execute request → Server runs job → Server returns result directly in the response. Simple but blocks the client connection for the full duration. Suitable for fast processes.</p>
+    </div>
+    <div class="compare-col">
+      <h4>Asynchronous (b)</h4>
+      <p>Client sends Execute → Server creates job, immediately returns <code>StatusInfo</code> with JobID → Client polls <code>GetStatus(JobID)</code> at intervals → When finished, client calls <code>GetResult(JobID)</code>. Required for long-running processes (interpolation, simulation).</p>
+    </div>
+  </div>
+
+  <h4>Data Transfer: By Value vs. By Reference</h4>
+  <div class="compare">
+    <div class="compare-col">
+      <h4>Call by value / Response by value</h4>
+      <p>Input data is <em>embedded inline</em> in the Execute request. Result is <em>embedded inline</em> in the response. Simple but impractical for large datasets — transmits data twice over the wire.</p>
+    </div>
+    <div class="compare-col">
+      <h4>Call by reference / Response by reference</h4>
+      <p>Execute request contains a <em>URL reference</em> to input data (e.g., a WFS endpoint). Server fetches data directly from the source. Result is stored on the server; response contains a URL reference. Client queries the result data separately. Efficient for large datasets already in GDI.</p>
+    </div>
+  </div>
+  <div class="box box-purple">
+    <strong>Call by reference is the GDI-native pattern:</strong> A WPS processing pipeline looks like — WFS (source data) → URL reference in Execute → WPS processes it → result URL → WCS or WFS serves result → WMS visualizes. No data is ever transmitted unnecessarily; everything flows through service references.
+  </div>
+
+  <h4>WPS Profiles — Adding Semantics</h4>
+  <p>The base WPS interface is purely syntactic — it says nothing about what a process <em>means</em>. WPS profiles add semantic descriptions: what kind of spatial operation does this process perform? What are the conceptual semantics of its inputs and outputs? This is where WPS links forward to Geo Semantics (chapter 6.4) and the challenges of semantic service chaining.</p>
+
+  <h3>Example: Forest Fire Hazard Assessment (ORCHESTRA Project)</h3>
+  <p>EU Research Project ORCHESTRA (2004–08) — pre-cursor to INSPIRE. Implemented a full WPS-based distributed geoprocessing pipeline for European forest fire risk assessment:</p>
+  <div class="flow">
+    <div class="flow-step">WFS (MS1, MS2: fire records, different schemas)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Schema Translation to common ForestFireRegistration model</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">WPS: Join &amp; Aggregation by NUTS admin units → fire frequency</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">WPS: Normalisation by area</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">WPS: Classification Service</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">WMS: render result map</div>
+  </div>
+  <p>This scenario showed that interoperable, distributed geoprocessing across national borders and different data formats is possible with WPS + WFS + WMS — but requires significant upfront work on schema harmonization and process design.</p>
+
+  <h3>OGC API – Processes (REST equivalent of WPS)</h3>
+  <p>The modern REST/OpenAPI replacement for WPS. Part 1 Core published December 2021. Architecture:</p>
+  <table class="tbl">
+    <tr><th>Part</th><th>Status (Jan 2025)</th><th>Functionality</th></tr>
+    <tr>
+      <td><strong>Part 1: Core</strong></td>
+      <td>Published; 3 compliant / 6 uncertified products</td>
+      <td>Offer and execute processes via REST/JSON. URL pattern: <code>{root}/processes/{id}/execution</code></td>
+    </tr>
+    <tr>
+      <td><strong>Part 2: Deploy, Replace, Undeploy</strong></td>
+      <td>Draft</td>
+      <td>Register new processes dynamically into a running service</td>
+    </tr>
+    <tr>
+      <td><strong>Part 3: Workflows and Chaining</strong></td>
+      <td>Draft</td>
+      <td>Define and execute multi-step process chains</td>
+    </tr>
+    <tr>
+      <td><strong>Part 4: Job Management</strong></td>
+      <td>Draft</td>
+      <td>Advanced management of asynchronous jobs</td>
+    </tr>
+  </table>
+
+  <h3>Moving Data vs. Moving Code — The Fundamental Tension</h3>
+  <p>The current WPS paradigm follows a <strong>data-driven</strong> model: data is transported to the processing function. This approach has fundamental limits at scale.</p>
+
+  <table class="tbl">
+    <tr><th></th><th>Data-driven (current WPS)</th><th>Algorithm-driven (tightly coupled)</th><th>Algorithm-driven (loosely coupled)</th></tr>
+    <tr>
+      <td><strong>Principle</strong></td>
+      <td>Data is sequentially transported to WPS and processed</td>
+      <td>Code is deployed directly on the data source (like distributed databases)</td>
+      <td>Code is deployed on any platform, can access varying data sources</td>
+    </tr>
+    <tr>
+      <td><strong>Advantages</strong></td>
+      <td>Flexible; current state of the art (WFS → WPS → WMS)</td>
+      <td>Reduces needless data transfer; partly works with protected data</td>
+      <td>Very flexible; links well with cloud computing; allows reuse on different platforms; works with protected data</td>
+    </tr>
+    <tr>
+      <td><strong>Disadvantages</strong></td>
+      <td>Potentially huge data transfer (does not scale); not applicable on protected data</td>
+      <td>Less flexible; tightly coupled to specific data sources and databases</td>
+      <td>Not yet available; lacks common geoprocessing languages</td>
+    </tr>
+    <tr>
+      <td><strong>Status</strong></td>
+      <td>Established</td>
+      <td>Partial implementations (distributed databases)</td>
+      <td>Research goal</td>
+    </tr>
+  </table>
+
+  <div class="box box-purple">
+    <strong>Moving Code Architecture (Müller, Bernard, Kadner 2013):</strong> A Geoprocessing Repository stores published stable algorithms. Developers publish algorithms; users find algorithms in the repository and bind them to an algorithm feed. A WPS Instance deploys the algorithm from the feed and connects it to the relevant data servers (WFS, WCS, SOS). This separates the algorithm from the data source — the same algorithm can run on different data.
+  </div>
+
+  <h4>Open Challenges for Moving Code</h4>
+  <ul>
+    <li><strong>Functionality:</strong> How to describe the algorithm semantically? What is its interface? → WPS Profiles, taxonomies, geo-algebras</li>
+    <li><strong>Platform:</strong> Which software components and data sources must be in place? → URIs, registries</li>
+    <li><strong>Infrastructure:</strong> Which compute resources (memory, cores, storage) are required? → Cloud standards (OCCI)</li>
+    <li><strong>Legal:</strong> Which licenses and copyrights apply to both code and data? → Creative Commons, formal licensing</li>
+  </ul>
+
+  <h3>Conclusion: Distributed Geoprocessing</h3>
+  <ul>
+    <li>WPS is the current basis for interoperable geoprocessing in GDI</li>
+    <li>Open research challenges: moving geocode (instead of moving data), formalizing geooperators with shared semantics, composing distributed geoprocessing workflows</li>
+    <li>Strong links to reproducible research — sharing the full processing chain, not just the result</li>
+  </ul>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     6.3  GEOSIMULATION & GEO SENSOR WEB
+     ════════════════════════════════════════ -->
+<div class="ch c3" id="s63">
+  <div class="ch-label" style="background:var(--c3l);color:var(--c3);">6.3 · Interoperable Geosimulations &amp; Geo Sensor Web</div>
+  <h2>Interoperable Geosimulations &amp; Geo Sensor Web</h2>
+
+  <h3>The Problem Space — Two Motivating Scenarios</h3>
+  <div class="g2">
+    <div class="card">
+      <h4>Scenario 1: Environmental Planning</h4>
+      <p>A planned construction site in Fictivevalley. Questions: Which effects does the planned site have on nocturnal air flows? Where and when does it increase air pollution? Requires: simulation of scenarios + management, analysis, and assessment of spatio-temporal information (pre- and post-processing). Tools needed: GIS + simulation systems working together.</p>
+    </div>
+    <div class="card">
+      <h4>Scenario 2: Risk Assessment / Toxic Dispersion</h4>
+      <p>An accident causes a toxic cloud. Questions: When does the plume reach urbanized areas? How many people are affected and where? How to distribute information quickly? Requires: real-time simulation + ad-hoc integration and synchronization of spatio-temporal data + communication through GDI.</p>
+    </div>
+  </div>
+
+  <h3>Modeling Temporal Aspects of Geodata</h3>
+  <p>A fundamental prerequisite for geosimulation in GDI is proper handling of time. Four temporal dimensions in geodata:</p>
+  <table class="tbl">
+    <tr><th>Temporal Dimension</th><th>Definition</th><th>Support in GIS</th></tr>
+    <tr>
+      <td><strong>Transaction time</strong></td>
+      <td>Time at which a datum gets stored, changed, or deleted in a database</td>
+      <td>Typically supported by standard databases and GIS</td>
+    </tr>
+    <tr>
+      <td><strong>User time</strong></td>
+      <td>Time at which a datum from the database is used in an application</td>
+      <td>Typically supported</td>
+    </tr>
+    <tr>
+      <td><strong>Real / valid time</strong></td>
+      <td>Time at which the observed phenomenon or event actually happened in the real world</td>
+      <td>Partly supported in GIS</td>
+    </tr>
+    <tr>
+      <td><strong>Scenario / branch time</strong></td>
+      <td>Future time at which a phenomenon might happen — for simulation scenarios and forecasts</td>
+      <td><strong>Not typically supported in GIS</strong> — major gap for geosimulation</td>
+    </tr>
+  </table>
+
+  <h4>Two Models for Representing Real/Valid Time</h4>
+  <div class="compare">
+    <div class="compare-col">
+      <h4>Time Stamp Model</h4>
+      <p>Data changes stored at the <em>attribute level</em>. A new value and its timestamp are stored when an attribute changes. Efficient storage for slowly-varying attributes. Doing a time slice across all attributes requires interpolation. Requires defining what constitutes a "change" (e.g., what temperature delta triggers a new entry?). Hardly supported in current GIS.</p>
+    </div>
+    <div class="compare-col">
+      <h4>Snapshot Model</h4>
+      <p>Complete acquisition of <em>all</em> attribute values for one point in time. Easy and efficient access to time slices (aerial images, climate modelling). The time of change of a specific attribute cannot be detected; value changes between two snapshots are lost. Potentially very redundant and storage-intensive for mostly-static attributes. Hardly supported in current GIS.</p>
+    </div>
+  </div>
+
+  <h3>Cooperation of GIS and Simulation Systems — Evolution</h3>
+  <p>Three generations of GIS–simulation coupling:</p>
+
+  <div class="levels">
+    <div class="level-row">
+      <span class="level-badge" style="width:180px;">~1988: File interfaces</span>
+      <span class="level-desc"><strong>Manual data exchange via files.</strong> Robust and easy — still often state-of-the-art. Problems: no common method base, tedious, risk of inconsistency and information loss due to incomplete conversions and missing dimensions, no direct feedback between systems, poor 3D/4D support.</span>
+    </div>
+    <div class="level-row">
+      <span class="level-badge" style="width:180px;">~1996: Common APIs</span>
+      <span class="level-desc"><strong>Shared data and method access tiers.</strong> Open Programming Interfaces, 2-tier and 3-tier architectures. Common data access layer for GIS and simulation models. Problems: requires development effort; GIS still lacks 3D/4D; no standardized architecture for interoperable geosimulation.</span>
+    </div>
+    <div class="level-row">
+      <span class="level-badge" style="width:180px;">~2004: GDI services</span>
+      <span class="level-desc"><strong>Service-based integration via standardized GDI interfaces.</strong> Simulation systems exposing SWE interfaces (SOS, SPS); GDI consuming simulation output via standard services. Still mainly a research area.</span>
+    </div>
+  </div>
+
+  <div class="box box-teal">
+    <strong>Example — VirGIS / AtmoGIS (Bernard &amp; Krüger, 2001):</strong> A programming library (VirGIS) extended OpenGIS specifications to handle 4D fields, offering a single interface abstracting the underlying GIS kernel. AtmoGIS built on top, providing API classes and methods for atmospheric simulation (solvers, classification, tracer calculation, visualization). This enabled the same 4D data and method base to be used by both simulation models and GIS analysis tools — a precursor to today's GDI-based approach.
+  </div>
+
+  <h3>Two Aspects of Geosimulation in GDI</h3>
+  <div class="g2">
+    <div class="card">
+      <h4>1 — Access to time-variant geoinformation</h4>
+      <p>Using time dimensions in existing GI services (WMS, WFS, WCS support optional time parameters). Integration of real-time observations via <strong>Sensor Web Enablement (SWE)</strong>. Examples: IPCC Interactive Atlas, GLUES Geoportal, THREDDS Data Server for NetCDF climate data.</p>
+    </div>
+    <div class="card">
+      <h4>2 — Sharing and cooperative execution of geosimulations</h4>
+      <p>Integration of geosimulation systems/services into GDI. Interoperable geosimulation services. Requires standardized interfaces for controlling, executing, and retrieving results from simulation models. Still mainly a research area.</p>
+    </div>
+  </div>
+
+  <h3>Geo Sensor Web &amp; Sensor Web Enablement (SWE)</h3>
+  <div class="def">
+    <strong>Sensor Web:</strong> "A coordinated observation infrastructure composed of a distributed collection of resources — sensors, platforms, models, communications infrastructure — that can collectively behave as a single, autonomous, task-able, dynamically adaptive and reconfigurable observing system that provides raw and processed data, along with associated metadata, via a set of standards-based service-oriented interfaces. Human reports, RADAR, satellite feeds, models, and thermometers are all examples of sensors within the context of a sensor web."
+    <cite>— OGC Sensor Web Enablement definition</cite>
+  </div>
+
+  <p><strong>Key insight:</strong> In the SWE definition, "sensor" is intentionally broad — it includes simulation models. This is the conceptual bridge between sensor data and simulation data in GDI: a simulation model can be treated as a "virtual sensor" that produces observations.</p>
+
+  <h4>SWE Components and Their Roles</h4>
+  <table class="tbl">
+    <tr><th>SWE Component</th><th>Role</th></tr>
+    <tr>
+      <td><strong>Sensor Observation Service (SOS)</strong></td>
+      <td>Provides access to observations and simulation results. The central data access service for sensor/simulation data — analogous to WFS for feature data but for time-series observations.</td>
+    </tr>
+    <tr>
+      <td><strong>Sensor Planning Service (SPS)</strong></td>
+      <td>Parametrizes, starts, and controls a sensor or simulation run. The entry point for requesting a new observation or launching a simulation with specific parameters.</td>
+    </tr>
+    <tr>
+      <td><strong>Sensor Model Language (SensorML)</strong></td>
+      <td>Describes the sensor or simulation model itself — its capabilities, parameters, coordinate reference systems, calibration history.</td>
+    </tr>
+    <tr>
+      <td><strong>Observations and Measurements (O&amp;M)</strong></td>
+      <td>Defines the conceptual model and GML encoding for observation data — how to represent a measurement with its phenomenon time, result time, observed property, feature of interest, and result value.</td>
+    </tr>
+    <tr>
+      <td><strong>Sensor Event Service (SES) / Publish-Subscribe Interface</strong></td>
+      <td>Asynchronous notification — informs clients (users, applications) that new simulation results or observations are available. Essential for real-time workflows where clients cannot continuously poll.</td>
+    </tr>
+    <tr>
+      <td><strong>Web Notification Service (WNS)</strong></td>
+      <td>Delivers notifications to users via various channels (email, SMS, HTTP callback).</td>
+    </tr>
+  </table>
+  <p><strong>Example: PEGELONLINE</strong> (<code>pegelonline.wsv.de</code>) — real-time water gauge data for German waterways via SOS interface. One of the most concrete operational SWE implementations in Germany.</p>
+  <p><strong>Open-source implementation:</strong> 52North SOS (<code>52north.org</code>) and Helgoland sensor web viewer.</p>
+
+  <h3>Integration of Geosimulation via SWE — "Simulation as Sensor"</h3>
+  <p>The SWE paradigm can be applied to link simulations into GDI by treating a simulation model as a sensor:</p>
+  <div class="flow">
+    <div class="flow-step">Client registers for notifications (WNS)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Client sends DescribeCollection + SubmitRequest to SPS (start simulation with parameters)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Simulation runs, stores results to Datastore</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">SWE notifies client via Publish/Subscribe that results are ready</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Client calls GetObservation on SOS to retrieve results</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Results visualized via WMS or WCS</div>
+  </div>
+
+  <h3>Interoperable Geosimulation — Standards Approaches</h3>
+  <div class="g2">
+    <div class="card">
+      <h4>OpenMI (Open Modelling Interface)</h4>
+      <p>OGC standard for coupling hydrological and environmental models. Provides interface descriptions and reference implementations. Allows models to exchange time-stepping data directly. Best suited for tightly-coupled domain-specific model chains. (<code>ogc.org/standards/openmi</code>)</p>
+    </div>
+    <div class="card">
+      <h4>High Level Architecture (HLA)</h4>
+      <p>IEEE 1516 standard (since 2000) for distributed simulation — the most widely accepted standard in simulation engineering. Key concepts: <strong>Federates</strong> (individual simulators) organized into a <strong>Federation</strong>; a <strong>Runtime Infrastructure (RTI)</strong> manages communication and time synchronization. Strong time management; designed for interchangeability and reuse of simulation components.</p>
+    </div>
+  </div>
+  <div class="box box-teal">
+    <strong>GI Services + HLA Bridge:</strong> One research approach wraps an HLA-based simulation federation behind a GDI interface — a "bridge" component exposes SPS/SOS interfaces to the GDI side while communicating with the simulation federates via RTI on the simulation side. This bridges the two worlds without requiring simulation models to be rewritten.
+  </div>
+
+  <h3>Conclusion: Geosimulation, Sensor Web and GDI</h3>
+  <ul>
+    <li>Current GIS–simulation cooperation is mainly via manual file exchanges; GIS lacks good 3D and time support → tedious, information loss, no feedback loops</li>
+    <li>GDI standards technically support 4D, but 4D is hardly implemented in practice</li>
+    <li>SWE standards support integration of real-time measurements into GDI and can link simulations (simulation = sensor)</li>
+    <li>Community models (climate, hydrology, agriculture, ocean) allow domain-specific simulation exchange</li>
+    <li>Approaches toward interoperable geosimulation (HLA, OpenMI) are still primarily research — not yet mainstream GDI</li>
+  </ul>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     6.4  GEO SEMANTICS
+     ════════════════════════════════════════ -->
+<div class="ch c4" id="s64">
+  <div class="ch-label" style="background:var(--c4l);color:var(--c4);">6.4 · Geo Semantics</div>
+  <h2>Geo Semantics &amp; Ontologies</h2>
+
+  <h3>The Problem: Current Standards Address Syntax, Not Meaning</h3>
+  <p>All the OGC standards covered so far (WMS, WFS, WCS, WPS, CSW) primarily address the <em>syntax</em> of exchanged geodata and operations:</p>
+  <ul>
+    <li>Operation names and signatures (GetMap, GetFeature...)</li>
+    <li>Data types (literal, bbox, complex)</li>
+    <li>Communication protocols (HTTP GET/POST, SOAP, REST)</li>
+  </ul>
+  <p>Semantics — the <em>meaning</em> of the data and operations — are addressed only indirectly: as common domain data models (application schemas like ATKIS, INSPIRE) or in informal textual descriptions (metadata abstracts). Machines cannot <em>reason</em> about textual descriptions.</p>
+
+  <h3>A Concrete Semantic Problem — Water Gauge Data</h3>
+  <p>Two WFS services, both providing water gauge observations:</p>
+  <table class="tbl">
+    <tr><th>BafG (Germany)</th><th>CHMI (Czech Republic)</th></tr>
+    <tr><td>Feature type: <code>Pegelmessung</code></td><td>Feature type: <code>StavVody</code></td></tr>
+    <tr><td>Attribute: <code>name</code></td><td>Attribute: <code>stanice</code></td></tr>
+    <tr><td>Attribute: <code>wasserstand_m</code> (water level in <strong>meters</strong>)</td><td>Attribute: <code>stav</code> (water level in <strong>centimeters</strong>)</td></tr>
+    <tr><td>Attribute: <code>zeitpunkt</code></td><td>Attribute: <code>datum</code></td></tr>
+    <tr><td>Geometry: <code>gml:pointProperty</code></td><td>Geometry: <code>gml:position</code></td></tr>
+  </table>
+  <p>A machine reading both WFS responses would see completely different field names, different units, different GML geometry properties. It cannot automatically determine that <code>wasserstand_m</code> and <code>stav</code> describe the same concept — just in different languages and units. This is the semantic interoperability problem.</p>
+  <div class="box box-amber">
+    <strong>Why this matters:</strong> Syntactic interoperability (both return GML via WFS) is achieved. Schema-level interoperability (do the same attributes describe the same things?) is not. Without semantic description, automated fusion of these two datasets requires manual intervention — a human must map the fields. At GDI scale (thousands of services), manual mapping does not work.
+  </div>
+
+  <h3>Synonyms and Homonyms — The Core Semantic Challenge</h3>
+  <div class="g2">
+    <div class="card">
+      <h4>Synonyms — same meaning, different words</h4>
+      <p>Example: "Shore" and "Bank" (when looking for regions close to water) describe the same geographic concept. A system searching for "Bank" must also search for "Shore" to be semantically complete. Thesauri (chapter 5.5.1) partially address synonyms within a controlled vocabulary.</p>
+    </div>
+    <div class="card">
+      <h4>Homonyms — same word, different meanings</h4>
+      <p>Example: "Bank" in geography = the land along the edge of a waterbody. "Bank" in economics = a financial institution. Without contextual knowledge, a machine cannot distinguish. This is why pure keyword search fails for geodata: "bank" in a geographic query might return financial data.</p>
+    </div>
+  </div>
+  <p>Detecting synonyms and distinguishing homonyms requires <strong>knowledge about concepts and context</strong> — not just string matching. This is what ontologies provide.</p>
+
+  <h3>Ontologies</h3>
+  <div class="def">
+    "An ontology is an explicit specification of a shared conceptualisation." — T. Gruber
+    <br><br>
+    An ontology models a knowledge domain using a standardized vocabulary, types, and relations. It formalizes the <em>concepts</em> of a domain, the <em>relations</em> between them, and the <em>constraints</em> that hold.
+    <cite>— Note: this is the computer science definition, not the philosophical one. In computer science, many domain-specific ontologies coexist.</cite>
+  </div>
+
+  <h4>What an Ontology Contains</h4>
+  <ul>
+    <li><strong>Classes</strong> — abstract concepts (Painter, Artist, River, Municipality)</li>
+    <li><strong>Instances</strong> — individual objects (Picasso is an instance of Painter)</li>
+    <li><strong>Properties / Relations</strong> — links between classes or instances (<code>isPainterOf</code>, <code>isLocatedIn</code>)</li>
+    <li><strong>Inverse relations</strong> — <code>paint</code> and <code>beingPainted</code> are inverses; allows reasoning both ways</li>
+    <li><strong>Hierarchies</strong> — Painter is a subclass of Artist; enables subsumption reasoning</li>
+  </ul>
+  <p><strong>Reasoning example:</strong> From the ontology hierarchy Picasso → Painter → Artist, a reasoner can automatically infer that Picasso is an Artist, even if this was never explicitly stated. Picasso and Raphael (Santi) both use the same painting technique and are both Painters — the ontology enables the system to reason about their similarity.</p>
+
+  <h3>OWL — The Formal Language for Ontologies</h3>
+  <div class="def">
+    <strong>OWL (Web Ontology Language)</strong> is the W3C standard for formalizing ontologies on the web. It is built on top of <strong>RDF (Resource Description Framework)</strong> — the same triple-based data model used in Linked Data (chapter 5.1). The idea: ontologies (taxonomies, relations) are formalized as OWL classes; data (instances) are described using those classes (semantic annotation); a <strong>reasoner</strong> then uses the ontology for automatic logical inference.
+  </div>
+  <p>Key point: OWL/RDF is the technical bridge between Linked Data (chapter 5.1) and Geo Semantics. The same RDF triple structure that describes linked data resources can also express ontological class hierarchies and property definitions.</p>
+
+  <h3>Three Applications of Ontologies in GDI</h3>
+  <table class="tbl">
+    <tr><th>Application</th><th>How ontologies help</th><th>Link to earlier chapters</th></tr>
+    <tr>
+      <td><strong>1. Discovery and integration of geodata</strong></td>
+      <td>A query for "water level" at a German gauge station can be matched against a Czech WFS offering "StavVody" because an ontology maps both to the same concept. Semantic search transcends language and naming conventions.</td>
+      <td>Extends catalogue services (CSW, chapter 5.5.2) and thesauri (chapter 5.5.1) — ontologies are a more powerful and formal version of thesauri</td>
+    </tr>
+    <tr>
+      <td><strong>2. Data fusion</strong></td>
+      <td>Ontological reasoning helps identify which attributes in two datasets describe the same real-world property — enabling automated schema matching beyond string similarity. Similarity between concepts can be measured by their distance in the ontology hierarchy.</td>
+      <td>Semantic similarity measures for geodata fusion (chapter 5.4.2)</td>
+    </tr>
+    <tr>
+      <td><strong>3. Semantic geoprocessing workflow composition</strong></td>
+      <td>If every WPS process has a semantic description of its inputs and outputs (using ontology concepts), a system can automatically check whether two processes can be chained — whether the output type of process A is compatible with the input type of process B. Enables (semi-)automatic service chaining.</td>
+      <td>WPS and service chaining (chapter 6.2); service chain types (chapter 5.7)</td>
+    </tr>
+  </table>
+
+  <h3>Hybrid Ontology Approach — Example for Discovery</h3>
+  <p>How ontology-based discovery works (Lutz, 2005):</p>
+  <div class="flow">
+    <div class="flow-step">User query in natural language: "What is the water level at control point X at time Y in the Elbe River?"</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Query concept is described in OWL/DL (Description Logic): formalized as "water level measurement" concept</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Logical reasoner checks: does the application ontology of a service contain a concept equivalent to or subsumed by "water level"?</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">German BafG WFS: <code>Pegelmessung</code> with <code>wasserstand_m</code> → matched via Domain Ontology</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Czech CHMI WFS: <code>StavVody</code> with <code>stav</code> → also matched; unit conversion applied automatically</div>
+  </div>
+  <p>The <strong>Hybrid Ontology</strong> approach distinguishes: a high-level <strong>Domain Ontology</strong> (general concepts like "water body", "measurement", "gauge station") and an <strong>Application Ontology</strong> (how a specific service describes its data, mapped to the domain ontology). Reasoning bridges between them.</p>
+
+  <h3>Geo Semantics — Links to the Rest of the Lecture</h3>
+  <p>Geo Semantics is the thread that runs through the entire course — it is not an isolated topic but the deep challenge underlying all interoperability:</p>
+  <ul>
+    <li><strong>Chapter 4 — Organizations:</strong> INSPIRE data specifications create common domain data models → the first step toward shared semantics</li>
+    <li><strong>Chapter 5.4 — Schema Transformation:</strong> Semantic aspect of transformation (converting ATKIS → INSPIRE is fundamentally a semantic alignment problem)</li>
+    <li><strong>Chapter 5.4 — Data Fusion:</strong> Semantic similarity measures use ontology reasoning to match attributes across datasets</li>
+    <li><strong>Chapter 5.5 — Thesauri:</strong> Controlled vocabularies (GEMET) are simplified, non-formal ontologies — ontologies are the formal generalization</li>
+    <li><strong>Chapter 6.2 — Geoprocessing:</strong> Semantic WPS profiles describe the meaning of process inputs/outputs to enable automatic workflow composition</li>
+    <li><strong>Chapter 5.1 — Linked Data:</strong> RDF/OWL is the technical foundation for both Linked Data and formal ontologies — they are the same technology stack</li>
+  </ul>
+
+  <h3>Open Research Questions in Geo Semantics</h3>
+  <ul>
+    <li>How to achieve common geo-ontologies as semantic reference systems? (Who maintains them? How are they governed?)</li>
+    <li>How to realize automatic semantic annotation of datasets and services? (Links strongly to automated metadata generation)</li>
+    <li>How to best use ontologies for semantic integration of geodata at GDI scale?</li>
+    <li>How to achieve and use semantic descriptions of geoprocessing workflows to support (semi-)automatic service chaining?</li>
+  </ul>
+  <div class="box box-amber">
+    <strong>Bottom line:</strong> Geo Semantics is not yet solved — it remains one of the most active research frontiers in GDI. Current standards achieve syntactic and structural interoperability well. Full semantic interoperability — where machines autonomously understand, discover, combine, and process geodata from unknown sources — is the grand challenge that connects all of Chapter 6 and much of the rest of the course.
+  </div>
+
+  <h3>Summary: The Chapter 6 Research Agenda</h3>
+  <table class="tbl">
+    <tr><th>Topic</th><th>Current state</th><th>Research frontier</th></tr>
+    <tr>
+      <td><strong>Scientific GDI</strong></td>
+      <td>sGDI built on same OGC/ISO stack as aGDI; NFDI4Earth funding scientific data infrastructures</td>
+      <td>Time/scenario metadata, lineage, DOIs for all GI resources, automated metadata generation</td>
+    </tr>
+    <tr>
+      <td><strong>Distributed Geoprocessing</strong></td>
+      <td>WPS / OGC API Processes — interoperable function execution</td>
+      <td>Moving code (algorithm-driven), semantic WPS profiles, formalized geooperators, workflow composition</td>
+    </tr>
+    <tr>
+      <td><strong>Geosimulation</strong></td>
+      <td>File-based coupling; some GDI integration via SWE interfaces</td>
+      <td>Interoperable simulation services; HLA–GDI bridges; 4D data models in practice</td>
+    </tr>
+    <tr>
+      <td><strong>Sensor Web</strong></td>
+      <td>SWE standards (SOS, SPS, SensorML) operational; PEGELONLINE as example</td>
+      <td>Simulation-as-sensor integration; automated sensor discovery; event-driven GDI</td>
+    </tr>
+    <tr>
+      <td><strong>Geo Semantics</strong></td>
+      <td>Thesauri (GEMET), common data specs (INSPIRE) as informal semantic reference</td>
+      <td>Formal OWL ontologies for discovery and fusion; automatic semantic annotation; semantic service chaining</td>
+    </tr>
+  </table>
+</div>
+
+</main>
+</body>
+</html>
